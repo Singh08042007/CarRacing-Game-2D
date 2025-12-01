@@ -111,7 +111,7 @@
     }
 }
 
-/* LANDSCAPE MODE - Even MORE aggressive scaling */
+/* LANDSCAPE MODE - Even MORE aggressive scaling + bottom positioning */
 @media (max-width: 768px) and (orientation: landscape) {
     body {
         font-size: 6px !important;
@@ -150,9 +150,21 @@
         width: 4rem !important;
     }
 
-    /* Reduce touch controls even more in landscape */
-    [class*="md:hidden"] button {
-        transform: scale(0.4) !important;
+    /* LANDSCAPE BUTTON POSITIONING - Force to bottom */
+    .md\:hidden.z-40 {
+        padding-bottom: 0.5rem !important;
+        align-items: flex-end !important;
+    }
+
+    /* Increase button sizes in landscape for better visibility */
+    .md\:hidden button {
+        transform: scale(0.7) !important;
+    }
+
+    /* Make button text larger and clearer in landscape */
+    .md\:hidden button span {
+        font-size: 1.5rem !important;
+        font-weight: 900 !important;
     }
 
     /* Reduce top padding specifically */
