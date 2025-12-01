@@ -410,12 +410,35 @@ export default function Game2D() {
                 } else if (trackType === 'highway') {
                     ctx.fillStyle = '#555'; ctx.fillRect(x, y - 150, 5, 150); ctx.beginPath(); ctx.arc(x + 20, y - 150, 10, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0
                 } else if (trackType === 'racing') {
-                    ctx.fillStyle = '#222'; ctx.fillRect(x, y - 80, 150, 80);
-                    ctx.fillStyle = '#d32f2f'; ctx.fillRect(x, y - 85, 150, 5);
-                    for (let r = 0; r < 4; r++) {
-                        for (let c = 0; c < 12; c++) {
-                            ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 60%)`;
-                            ctx.beginPath(); ctx.arc(x + 10 + c * 10 + Math.random() * 5, y - 15 - r * 15, 3, 0, Math.PI * 2); ctx.fill();
+                    // Grandstand Structure
+                    ctx.fillStyle = '#222'; ctx.fillRect(x, y - 100, 160, 100); // Base
+
+                    // Roof
+                    ctx.beginPath(); ctx.moveTo(x - 20, y - 120); ctx.lineTo(x + 180, y - 130); ctx.lineTo(x + 180, y - 100); ctx.lineTo(x - 20, y - 100);
+                    ctx.fillStyle = '#b71c1c'; ctx.fill(); // Red roof
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+                    // Pillars
+                    ctx.fillStyle = '#444'; ctx.fillRect(x + 10, y - 100, 10, 100); ctx.fillRect(x + 140, y - 100, 10, 100);
+
+                    // Tiers & Crowd
+                    for (let r = 0; r < 5; r++) {
+                        const tierY = y - 20 - r * 15
+                        // Tier floor
+                        ctx.fillStyle = '#333'; ctx.fillRect(x + 20, tierY + 10, 120, 5);
+
+                        // People
+                        for (let c = 0; c < 10; c++) {
+                            if (Math.random() > 0.2) { // 80% occupancy
+                                const pX = x + 30 + c * 12 + Math.random() * 5
+                                const pY = tierY + 5
+                                // Body
+                                ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 40%)`;
+                                ctx.beginPath(); ctx.arc(pX, pY + 5, 4, 0, Math.PI * 2); ctx.fill();
+                                // Head
+                                ctx.fillStyle = '#ffccaa';
+                                ctx.beginPath(); ctx.arc(pX, pY, 2.5, 0, Math.PI * 2); ctx.fill();
+                            }
                         }
                     }
                 }
