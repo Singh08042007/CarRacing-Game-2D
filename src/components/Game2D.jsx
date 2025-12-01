@@ -24,6 +24,7 @@ export default function Game2D() {
     const fuelBarRef = useRef(null)
     const gameOverRef = useRef(null)
     const coinRefHUD = useRef(null)
+    const distBarRef = useRef(null)
     const coinRefGameOver = useRef(null)
 
     const [gameState, setGameState] = useState('menu')
@@ -38,6 +39,7 @@ export default function Game2D() {
     const [isMobile, setIsMobile] = useState(false)
     const [isLandscape, setIsLandscape] = useState(false)
     const [gameOverStats, setGameOverStats] = useState({ distance: 0, coins: 0 })
+    const coinsRef = useRef(0)
     const collectedCoinsSession = useRef(0)
     const lastRewardDist = useRef(0)
     const keys = useRef({})
@@ -73,6 +75,10 @@ export default function Game2D() {
     }, [])
 
     useEffect(() => {
+        coinsRef.current = coins
+    }, [coins])
+
+    useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session)
             if (session) fetchProfile(session.user.id)
@@ -100,7 +106,7 @@ export default function Game2D() {
         if (!session) return
         await supabase.from('profiles').upsert({
             id: session.user.id,
-            coins: coins,
+            coins: coinsRef.current,
             high_score: highScore,
             unlocked_cars: unlockedCars,
             selected_car: selectedCarId,
@@ -139,8 +145,8 @@ export default function Game2D() {
         setGameState('gameover')
         if (dist > highScore) {
             setHighScore(dist)
-            updateProfile()
         }
+        updateProfile()
     }
 
     useEffect(() => {
@@ -311,7 +317,7 @@ export default function Game2D() {
 
             // Aerodynamic Downforce
             if (currentCarConfig.current.downforce > 0) {
-                const downforce = currentCarConfig.current.downforce * (carBody.speed * carBody.speed) * 0.02
+                const downforce = currentCarConfig.current.downforce * (carBody.speed * carBody.speed) * 0.002
                 Body.applyForce(carBody, carBody.position, { x: 0, y: downforce })
             }
 
@@ -349,6 +355,7 @@ export default function Game2D() {
             if (speedRef.current) speedRef.current.innerText = `${speed} km/h`
             if (gearRefDisplay.current) gearRefDisplay.current.innerText = `${gearRef.current}/${currentCarConfig.current.gears}`
             if (fuelBarRef.current) fuelBarRef.current.style.width = `${fuel.current}%`
+            if (distBarRef.current) distBarRef.current.style.width = `${(dist % 100)}%`
             if (coinRefHUD.current) coinRefHUD.current.innerText = `${collectedCoinsSession.current}`
 
             if (fuel.current <= 0 && Math.abs(carBody.speed) < 0.1) handleGameOver("OUT OF FUEL!", dist)
@@ -381,13 +388,17 @@ export default function Game2D() {
             ctx.save()
             if (trackType === 'hilly') {
                 ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.moveTo(0, height);
-                for (let i = 0; i < width * 2; i += 150) ctx.lineTo((i - bgOffset) % (width * 2) - 100, height - 300 - Math.abs(Math.sin(i)) * 150);
+                for (let i = 0; i < width * 2; i += 150) {
+                    const x = ((i - bgOffset) % (width * 2) + (width * 2)) % (width * 2) - 100
+                    ctx.lineTo(x, height - 300 - Math.abs(Math.sin(i)) * 150);
+                }
                 ctx.lineTo(width, height); ctx.fill()
             } else if (trackType === 'highway') {
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 for (let i = 0; i < width * 2; i += 100) {
                     const h = 100 + Math.abs(Math.sin(i * 1321)) * 150
-                    ctx.fillRect((i - bgOffset) % (width * 2) - 50, height - h, 40, h)
+                    const x = ((i - bgOffset) % (width * 2) + (width * 2)) % (width * 2) - 50
+                    ctx.fillRect(x, height - h, 40, h)
                 }
             }
             ctx.restore()
@@ -580,7 +591,7 @@ export default function Game2D() {
                                     <div className="text-xl font-bold flex items-center gap-2"><span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span><span ref={gearRefDisplay} className="text-white text-2xl">1</span><span className="text-xs text-gray-400 tracking-widest">MANUAL</span></div>
                                     <div className="text-xl font-bold mt-2 flex items-center gap-2"><span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span><span ref={coinRefHUD} className="text-white text-2xl">0</span></div>
                                     <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
-                                    <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden"><div id="dist-bar-fill" className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div></div>
+                                    <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden"><div ref={distBarRef} className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div></div>
                                     <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
                                 </div>
                             </div>
