@@ -1093,7 +1093,7 @@ export default function Game2D() {
             }
             {/* Mobile Touch Controls - Optimized for new mobile UI */}
             {isMobile && (
-                <div className={`absolute bottom-0 left-0 right-0 pointer-events-none z-40 px-4 ${isLandscape ? 'pb-32' : 'pb-8'}`}>
+                <div className={`absolute bottom-0 left-0 right-0 pointer-events-none z-40 px-4 w-full ${isLandscape ? 'pb-8' : 'pb-8'}`}>
                     <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
                         {/* Left: Gear Shift */}
                         <div className="flex gap-2">
