@@ -226,6 +226,15 @@ export default function Game2D() {
             if (engineRef.current) { Matter.World.clear(engineRef.current.world); Matter.Engine.clear(engineRef.current); engineRef.current = null }
         }
         cleanupEngine()
+
+        isGameOver.current = false
+        fuel.current = 100
+        collectedCoinsSession.current = 0
+        lastRewardDist.current = 0
+        gearRef.current = 1
+        flipStartTime.current = null
+        keys.current = {}
+
         const Engine = Matter.Engine, Runner = Matter.Runner, Composite = Matter.Composite, Bodies = Matter.Bodies, Body = Matter.Body, Events = Matter.Events
         const engine = Engine.create({ gravity: { x: 0, y: 1 }, positionIterations: 8, velocityIterations: 6 })
         engineRef.current = engine
