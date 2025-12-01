@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 import Matter from 'matter-js'
 import { supabase } from '../supabaseClient'
 import Auth from './Auth'
+import engineUrl from '../assets/sounds/engine.mp3'
+import skidUrl from '../assets/sounds/skid.mp3'
+import coinUrl from '../assets/sounds/coin.mp3'
+import musicUrl from '../assets/sounds/music.mp3'
 
 const CARS = {
     RALLY: { id: 'rally', name: 'RALLY CAR', price: 0, maxSpeed: 170, gears: 6, color: '#D32F2F', wheelSpeedMultipliers: [0.3, 0.5, 0.7, 0.9, 1.2, 1.8], speedRanges: [35, 55, 75, 95, 115, 175], density: 0.005, downforce: 0, stiffness: 0.2 },
@@ -43,6 +47,7 @@ export default function Game2D() {
     const isGameOver = useRef(false)
     const carBodyRef = useRef(null)
     const gearRef = useRef(1)
+    const flipStartTime = useRef(null)
 
     const audioContext = useRef(null)
     const engineSound = useRef(null)
@@ -152,10 +157,10 @@ export default function Game2D() {
                     } catch (e) { console.warn('Failed to load sound:', url, e); return null }
                 }
                 const [engineBuffer, skidBuffer, coinBuffer, musicBuffer] = await Promise.all([
-                    loadSound('/src/assets/sounds/engine.mp3'),
-                    loadSound('/src/assets/sounds/skid.mp3'),
-                    loadSound('/src/assets/sounds/coin.mp3'),
-                    loadSound('/src/assets/sounds/music.mp3')
+                    loadSound(engineUrl),
+                    loadSound(skidUrl),
+                    loadSound(coinUrl),
+                    loadSound(musicUrl)
                 ])
                 if (engineBuffer) {
                     const engineSource = audioContext.current.createBufferSource()
@@ -280,24 +285,46 @@ export default function Game2D() {
             }
         }
         window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp)
+
         Events.on(engine, 'beforeUpdate', () => {
             if (isGameOver.current) return
             if (!carBody.position || isNaN(carBody.position.x)) { Body.setPosition(carBody, { x: 300, y: getTerrainHeight(300) - 100 }); Body.setVelocity(carBody, { x: 0, y: 0 }); return }
-            const speed = Math.round(carBody.speed * 5), dist = Math.floor(carBody.position.x / 100)
+
+            const speed = Math.round(carBody.speed * 5)
+            const dist = Math.floor(carBody.position.x / 100)
+
             if (dist > lastRewardDist.current + 100) { lastRewardDist.current = Math.floor(dist / 100) * 100; setCoins(prev => prev + 10); collectedCoinsSession.current += 10 }
+
+            // Flip Detection
+            if (Math.cos(carBody.angle) < -0.5) {
+                if (!flipStartTime.current) flipStartTime.current = Date.now()
+                else if (Date.now() - flipStartTime.current > 1000) handleGameOver("CAR FLIPPED!", dist)
+            } else {
+                flipStartTime.current = null
+            }
+
             if (fuel.current > 0) {
-                const gearIndex = gearRef.current - 1, wheelSpeed = currentCarConfig.current.wheelSpeedMultipliers[gearIndex] || 0.3, maxSpeed = currentCarConfig.current.speedRanges[gearIndex] || 30
-                if ((keys.current['KeyD'] || keys.current['ArrowRight']) && speed < maxSpeed) { Body.setAngularVelocity(wheelA, wheelSpeed); Body.setAngularVelocity(wheelB, wheelSpeed); fuel.current -= 0.05 }
+                const gearIndex = gearRef.current - 1
+                const wheelSpeed = currentCarConfig.current.wheelSpeedMultipliers[gearIndex] || 0.3
+                const maxSpeed = currentCarConfig.current.speedRanges[gearIndex] || 30
+
+                if ((keys.current['KeyD'] || keys.current['ArrowRight']) && speed < maxSpeed) {
+                    Body.setAngularVelocity(wheelA, wheelSpeed); Body.setAngularVelocity(wheelB, wheelSpeed); fuel.current -= 0.05
+                }
                 if (keys.current['KeyA'] || keys.current['ArrowLeft']) {
                     Body.setAngularVelocity(wheelA, -0.3); Body.setAngularVelocity(wheelB, -0.3); fuel.current -= 0.05
-                    if (skidSound.current && audioContext.current && Math.random() > 0.9) { const s = audioContext.current.createBufferSource(); s.buffer = skidSound.current; const g = audioContext.current.createGain(); g.gain.value = 0.2; s.connect(g); g.connect(audioContext.current.destination); s.start() }
+                    if (skidSound.current && audioContext.current && Math.random() > 0.9) {
+                        const s = audioContext.current.createBufferSource(); s.buffer = skidSound.current; const g = audioContext.current.createGain(); g.gain.value = 0.2; s.connect(g); g.connect(audioContext.current.destination); s.start()
+                    }
                 }
             }
+
             if (scoreRef.current) scoreRef.current.innerText = `${dist}m`
             if (speedRef.current) speedRef.current.innerText = `${speed} km/h`
             if (gearRefDisplay.current) gearRefDisplay.current.innerText = `${gearRef.current}/${currentCarConfig.current.gears}`
             if (fuelBarRef.current) fuelBarRef.current.style.width = `${fuel.current}%`
             if (coinRefHUD.current) coinRefHUD.current.innerText = `${collectedCoinsSession.current}`
+
             if (fuel.current <= 0 && Math.abs(carBody.speed) < 0.1) handleGameOver("OUT OF FUEL!", dist)
         })
         const canvas = canvasRef.current, ctx = canvas.getContext('2d')
