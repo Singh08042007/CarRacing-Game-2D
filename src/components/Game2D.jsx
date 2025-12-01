@@ -40,6 +40,7 @@ export default function Game2D() {
     const [isLandscape, setIsLandscape] = useState(false)
     const [gameOverStats, setGameOverStats] = useState({ distance: 0, coins: 0 })
     const [boosters, setBoosters] = useState(0)
+    const [coinsEnabled, setCoinsEnabled] = useState(true)
     const coinsRef = useRef(0)
     const boostersRef = useRef(0)
     const isBoosting = useRef(false)
@@ -292,7 +293,7 @@ export default function Game2D() {
         for (let i = 1; i < 400; i++) {
             const x = i * 1500 + 500, y = getTerrainHeight(x) - 50
             sensors.push(Bodies.circle(x, y, 20, { isStatic: true, isSensor: true, label: 'fuel' }))
-            if (i % 1 === 0) sensors.push(Bodies.circle(x + 750, getTerrainHeight(x + 750) - 30, 20, { isStatic: true, isSensor: true, label: 'coin' }))
+            if (coinsEnabled && i % 1 === 0) sensors.push(Bodies.circle(x + 750, getTerrainHeight(x + 750) - 30, 20, { isStatic: true, isSensor: true, label: 'coin' }))
         }
         Composite.add(world, sensors)
         const group = Body.nextGroup(true), startX = 300, startY = getTerrainHeight(300) - 100, carConfig = currentCarConfig.current
@@ -734,6 +735,7 @@ export default function Game2D() {
                                 <button onClick={() => startGame('hilly')} className="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">🏔️ HILLY CLIMB</button>
                                 <button onClick={() => startGame('racing')} className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">🏁 RACING TRACK</button>
                                 <button onClick={() => startGame('highway')} className="w-full py-4 bg-gradient-to-r from-orange-600 to-orange-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">🛣️ HIGHWAY</button>
+                                <button onClick={() => setCoinsEnabled(!coinsEnabled)} className={`w-full py-3 rounded-xl font-bold font-orbitron text-sm ${coinsEnabled ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 'bg-gray-800 text-gray-400 border border-gray-700'}`}>COINS: {coinsEnabled ? 'ON' : 'OFF'}</button>
                             </div>
                             <button onClick={() => setGameState('garage')} className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-white font-black text-base font-orbitron active:scale-95 transition-transform shadow-lg mt-2">🏪 GARAGE</button>
                         </div>
@@ -755,6 +757,7 @@ export default function Game2D() {
                                 <button onClick={() => startGame('racing')} className="group relative px-8 py-6 bg-gradient-to-b from-blue-600 to-blue-800 rounded-xl border-b-4 border-blue-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(33,150,243,0.4)] hover:shadow-[0_0_40px_rgba(33,150,243,0.6)] overflow-hidden"><div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>RACING TRACK</button>
                                 <button onClick={() => startGame('highway')} className="group relative px-8 py-6 bg-gradient-to-b from-orange-600 to-orange-800 rounded-xl border-b-4 border-orange-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:shadow-[0_0_40px_rgba(255,152,0,0.6)] overflow-hidden"><div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>HIGHWAY</button>
                             </div>
+                            <button onClick={() => setCoinsEnabled(!coinsEnabled)} className={`px-8 py-3 rounded-full font-bold font-orbitron tracking-widest transition-all border-2 ${coinsEnabled ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500 shadow-[0_0_20px_rgba(250,204,21,0.3)]' : 'bg-gray-800/50 text-gray-500 border-gray-700'}`}>COINS: {coinsEnabled ? 'ENABLED' : 'DISABLED'}</button>
                             <button onClick={() => setGameState('garage')} className="mt-4 px-16 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full border-4 border-purple-400/50 text-white font-black text-2xl font-orbitron animate-pulse-glow hover:scale-105 transition-transform shadow-[0_0_30px_rgba(147,51,234,0.5)]">OPEN GARAGE</button>
                         </div>
                     </div>
