@@ -309,6 +309,12 @@ export default function Game2D() {
                 flipStartTime.current = null
             }
 
+            // Aerodynamic Downforce
+            if (currentCarConfig.current.downforce > 0) {
+                const downforce = currentCarConfig.current.downforce * (carBody.speed * carBody.speed) * 0.02
+                Body.applyForce(carBody, carBody.position, { x: 0, y: downforce })
+            }
+
             if (fuel.current > 0) {
                 const gearIndex = gearRef.current - 1
                 const wheelSpeed = currentCarConfig.current.wheelSpeedMultipliers[gearIndex] || 0.3
