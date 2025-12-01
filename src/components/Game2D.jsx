@@ -107,16 +107,17 @@ export default function Game2D() {
         setLoadingData(false)
     }
 
-    const updateProfile = async () => {
+    const updateProfile = async (newHighScore = null) => {
         if (!session) {
             console.warn('No session, cannot save profile')
             return
         }
-        console.log('Saving profile...', { coins: coinsRef.current, highScore })
+        const scoreToSave = newHighScore !== null ? newHighScore : highScore
+        console.log('Saving profile...', { coins: coinsRef.current, highScore: scoreToSave })
         const { error } = await supabase.from('profiles').upsert({
             id: session.user.id,
             coins: coinsRef.current,
-            high_score: highScore,
+            high_score: scoreToSave,
             unlocked_cars: unlockedCars,
             selected_car: selectedCarId,
             updated_at: new Date()
@@ -154,10 +155,12 @@ export default function Game2D() {
         isGameOver.current = true
         setGameOverStats({ distance: dist, coins: collectedCoinsSession.current })
         setGameState('gameover')
+        let currentScore = highScore
         if (dist > highScore) {
             setHighScore(dist)
+            currentScore = dist
         }
-        updateProfile()
+        updateProfile(currentScore)
     }
 
     useEffect(() => {
