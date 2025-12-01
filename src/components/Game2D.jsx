@@ -409,6 +409,15 @@ export default function Game2D() {
                     ctx.fillStyle = '#3e2723'; ctx.fillRect(x + 15, y, 10, 10)
                 } else if (trackType === 'highway') {
                     ctx.fillStyle = '#555'; ctx.fillRect(x, y - 150, 5, 150); ctx.beginPath(); ctx.arc(x + 20, y - 150, 10, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0
+                } else if (trackType === 'racing') {
+                    ctx.fillStyle = '#222'; ctx.fillRect(x, y - 80, 150, 80);
+                    ctx.fillStyle = '#d32f2f'; ctx.fillRect(x, y - 85, 150, 5);
+                    for (let r = 0; r < 4; r++) {
+                        for (let c = 0; c < 12; c++) {
+                            ctx.fillStyle = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                            ctx.beginPath(); ctx.arc(x + 10 + c * 10 + Math.random() * 5, y - 15 - r * 15, 3, 0, Math.PI * 2); ctx.fill();
+                        }
+                    }
                 }
             }
 
