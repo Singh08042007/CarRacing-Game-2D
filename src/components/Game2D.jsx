@@ -173,11 +173,23 @@ export default function Game2D() {
             high_score: newHighScore !== undefined ? newHighScore : highScore,
             unlocked_cars: newUnlockedCars !== undefined ? newUnlockedCars : unlockedCars,
             updated_at: new Date(),
-            cameraPos.current = { x: 0, y: 0 }
+        }
 
-        if(gameOverRef.current) {
-                gameOverRef.current.style.display = 'none'
-            }
+        const { error } = await supabase.from('profiles').upsert(updates)
+        if (error) console.error('Error updating profile:', error)
+    }
+
+    const startGame = (type) => {
+        setTrackType(type)
+        setGameState('playing')
+        setRestartKey(prev => prev + 1)
+
+        // Request fullscreen on mobile to hide browser chrome
+        if (isMobile && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log('Fullscreen request failed:', err)
+            })
+        }
     }
 
     const buyCar = (carId) => {
