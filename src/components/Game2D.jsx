@@ -387,7 +387,8 @@ export default function Game2D() {
             const targetCamX = -carBody.position.x + width * 0.3 - lookAhead
             const targetCamY = -carBody.position.y + height * 0.6 + Math.abs(carBody.velocity.x) * 2
 
-            cameraPos.current.x += (targetCamX - cameraPos.current.x) * 0.05 // Smoother follow
+            const lerpFactor = Math.abs(carBody.speed) > 20 ? 0.15 : 0.08
+            cameraPos.current.x += (targetCamX - cameraPos.current.x) * lerpFactor // Dynamic follow
             cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
 
             // Apply Shake
