@@ -817,52 +817,95 @@ export default function Game2D() {
                 </div>
             )}
 
-            {/* MAIN MENU */}
+            {/* MAIN MENU - Conditional Mobile/Desktop */}
             {gameState === 'menu' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[url('https://images.unsplash.com/photo-1541447270888-83e8494f9c06?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center">
-                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+                isMobile ? (
+                    // MOBILE MENU - Simple & Clean
+                    <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-gray-900 via-black to-gray-900 p-6">
+                        <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+                            <h1 className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 font-orbitron mb-4">
+                                RALLY DRIFT 2D
+                            </h1>
 
-                    {/* Dynamic Overlay Lines */}
-                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'repeating-linear-gradient(45deg, #000 0, #000 10px, #222 10px, #222 20px)' }}></div>
-
-                    <div className="relative z-10 text-center flex flex-col items-center gap-10 animate-slide-up">
-                        <h1 className="text-9xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 font-orbitron drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-tighter" style={{ textShadow: '0 0 30px rgba(255,165,0,0.5)' }}>
-                            RALLY DRIFT <span className="text-white">2D</span>
-                        </h1>
-
-                        <div className="bg-black/80 p-6 rounded-2xl border border-yellow-500/30 flex items-center gap-8 shadow-2xl backdrop-blur-md">
-                            <div className="text-yellow-400 font-bold text-3xl font-orbitron flex flex-col items-center">
-                                <span className="text-sm text-gray-400 font-sans tracking-widest uppercase">Balance</span>
-                                {coins} <span className="text-lg">COINS</span>
+                            {/* Stats - Compact */}
+                            <div className="flex gap-4 text-white font-orbitron text-sm">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-yellow-400 font-bold text-lg">{coins}</span>
+                                    <span className="text-gray-400 text-xs">COINS</span>
+                                </div>
+                                <div className="w-px bg-white/20"></div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-white font-bold text-lg">{highScore}m</span>
+                                    <span className="text-gray-400 text-xs">BEST</span>
+                                </div>
                             </div>
-                            <div className="w-px h-12 bg-white/20"></div>
-                            <div className="text-white font-bold text-2xl font-orbitron flex flex-col items-center">
-                                <span className="text-sm text-gray-400 font-sans tracking-widest uppercase">Best Run</span>
-                                {highScore}m
+
+                            {/* Track Selection - Large Buttons */}
+                            <div className="flex flex-col gap-3 w-full mt-4">
+                                <button onClick={() => startGame('hilly')} className="w-full py-5 bg-gradient-to-r from-green-600 to-green-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                    🏔️ HILLY CLIMB
+                                </button>
+                                <button onClick={() => startGame('racing')} className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                    🏁 RACING TRACK
+                                </button>
+                                <button onClick={() => startGame('highway')} className="w-full py-5 bg-gradient-to-r from-orange-600 to-orange-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                    🛣️ HIGHWAY
+                                </button>
                             </div>
-                        </div>
 
-                        <div className="flex gap-6 mt-4">
-                            <button onClick={() => startGame('hilly')} className="group relative px-8 py-6 bg-gradient-to-b from-green-600 to-green-800 rounded-xl border-b-4 border-green-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(76,175,80,0.4)] hover:shadow-[0_0_40px_rgba(76,175,80,0.6)] overflow-hidden">
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                HILLY CLIMB
-                            </button>
-                            <button onClick={() => startGame('racing')} className="group relative px-8 py-6 bg-gradient-to-b from-blue-600 to-blue-800 rounded-xl border-b-4 border-blue-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(33,150,243,0.4)] hover:shadow-[0_0_40px_rgba(33,150,243,0.6)] overflow-hidden">
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                RACING TRACK
-                            </button>
-                            <button onClick={() => startGame('highway')} className="group relative px-8 py-6 bg-gradient-to-b from-orange-600 to-orange-800 rounded-xl border-b-4 border-orange-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:shadow-[0_0_40px_rgba(255,152,0,0.6)] overflow-hidden">
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                HIGHWAY
+                            {/* Garage Button */}
+                            <button onClick={() => setGameState('garage')} className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg mt-2">
+                                🏪 GARAGE
                             </button>
                         </div>
-
-                        <button onClick={() => setGameState('garage')} className="mt-4 px-16 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full border-4 border-purple-400/50 text-white font-black text-2xl font-orbitron animate-pulse-glow hover:scale-105 transition-transform shadow-[0_0_30px_rgba(147,51,234,0.5)]">
-                            OPEN GARAGE
-                        </button>
                     </div>
-                </div>
-            )
+                ) : (
+                    // DESKTOP MENU - Full Decorative Version
+                    <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[url('https://images.unsplash.com/photo-1541447270888-83e8494f9c06?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center">
+                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+
+                        {/* Dynamic Overlay Lines */}
+                        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: 'repeating-linear-gradient(45deg, #000 0, #000 10px, #222 10px, #222 20px)' }}></div>
+
+                        <div className="relative z-10 text-center flex flex-col items-center gap-10 animate-slide-up">
+                            <h1 className="text-9xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 font-orbitron drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] tracking-tighter" style={{ textShadow: '0 0 30px rgba(255,165,0,0.5)' }}>
+                                RALLY DRIFT <span className="text-white">2D</span>
+                            </h1>
+
+                            <div className="bg-black/80 p-6 rounded-2xl border border-yellow-500/30 flex items-center gap-8 shadow-2xl backdrop-blur-md">
+                                <div className="text-yellow-400 font-bold text-3xl font-orbitron flex flex-col items-center">
+                                    <span className="text-sm text-gray-400 font-sans tracking-widest uppercase">Balance</span>
+                                    {coins} <span className="text-lg">COINS</span>
+                                </div>
+                                <div className="w-px h-12 bg-white/20"></div>
+                                <div className="text-white font-bold text-2xl font-orbitron flex flex-col items-center">
+                                    <span className="text-sm text-gray-400 font-sans tracking-widest uppercase">Best Run</span>
+                                    {highScore}m
+                                </div>
+                            </div>
+
+                            <div className="flex gap-6 mt-4">
+                                <button onClick={() => startGame('hilly')} className="group relative px-8 py-6 bg-gradient-to-b from-green-600 to-green-800 rounded-xl border-b-4 border-green-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(76,175,80,0.4)] hover:shadow-[0_0_40px_rgba(76,175,80,0.6)] overflow-hidden">
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    HILLY CLIMB
+                                </button>
+                                <button onClick={() => startGame('racing')} className="group relative px-8 py-6 bg-gradient-to-b from-blue-600 to-blue-800 rounded-xl border-b-4 border-blue-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(33,150,243,0.4)] hover:shadow-[0_0_40px_rgba(33,150,243,0.6)] overflow-hidden">
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    RACING TRACK
+                                </button>
+                                <button onClick={() => startGame('highway')} className="group relative px-8 py-6 bg-gradient-to-b from-orange-600 to-orange-800 rounded-xl border-b-4 border-orange-900 text-white font-black text-2xl font-orbitron hover:translate-y-1 hover:border-b-0 transition-all shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:shadow-[0_0_40px_rgba(255,152,0,0.6)] overflow-hidden">
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    HIGHWAY
+                                </button>
+                            </div>
+
+                            <button onClick={() => setGameState('garage')} className="mt-4 px-16 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full border-4 border-purple-400/50 text-white font-black text-2xl font-orbitron animate-pulse-glow hover:scale-105 transition-transform shadow-[0_0_30px_rgba(147,51,234,0.5)]">
+                                OPEN GARAGE
+                            </button>
+                        </div>
+                    </div>
+                )
+            )}
             }
 
             {/* GARAGE */}
