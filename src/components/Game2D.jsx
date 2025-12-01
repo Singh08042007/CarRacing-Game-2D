@@ -842,19 +842,19 @@ export default function Game2D() {
 
                             {/* Track Selection - Large Buttons */}
                             <div className="flex flex-col gap-3 w-full mt-4">
-                                <button onClick={() => startGame('hilly')} className="w-full py-5 bg-gradient-to-r from-green-600 to-green-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                <button onClick={() => startGame('hilly')} className="w-full py-4 bg-gradient-to-r from-green-600 to-green-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">
                                     🏔️ HILLY CLIMB
                                 </button>
-                                <button onClick={() => startGame('racing')} className="w-full py-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                <button onClick={() => startGame('racing')} className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">
                                     🏁 RACING TRACK
                                 </button>
-                                <button onClick={() => startGame('highway')} className="w-full py-5 bg-gradient-to-r from-orange-600 to-orange-700 rounded-xl text-white font-black text-xl font-orbitron active:scale-95 transition-transform shadow-lg">
+                                <button onClick={() => startGame('highway')} className="w-full py-4 bg-gradient-to-r from-orange-600 to-orange-700 rounded-xl text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg">
                                     🛣️ HIGHWAY
                                 </button>
                             </div>
 
                             {/* Garage Button */}
-                            <button onClick={() => setGameState('garage')} className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-white font-black text-lg font-orbitron active:scale-95 transition-transform shadow-lg mt-2">
+                            <button onClick={() => setGameState('garage')} className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full text-white font-black text-base font-orbitron active:scale-95 transition-transform shadow-lg mt-2">
                                 🏪 GARAGE
                             </button>
                         </div>
@@ -1087,7 +1087,7 @@ export default function Game2D() {
                 )
             }
             {/* Mobile Touch Controls - Optimized for new mobile UI */}
-            <div className="absolute bottom-0 left-0 right-0 pointer-events-none md:hidden z-40 pb-4 px-4">
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-none md:hidden z-40 pb-6 px-4">
                 <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
                     {/* Left: Gear Shift */}
                     <div className="flex gap-2">
