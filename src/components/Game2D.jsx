@@ -379,17 +379,54 @@ export default function Game2D() {
         const asphaltPattern = createAsphaltPattern(ctx), grassPattern = createGrassPattern(ctx)
         const render = () => {
             const width = canvas.width = window.innerWidth, height = canvas.height = window.innerHeight
-            const targetCamX = -carBody.position.x + width * 0.3, targetCamY = -carBody.position.y + height * 0.6
-            cameraPos.current.x += (targetCamX - cameraPos.current.x) * 0.1; cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
+
+            // Dynamic Camera
+            const lookAhead = carBody.velocity.x * 20
+            const speedShake = Math.abs(carBody.speed) > 30 ? (Math.random() - 0.5) * (carBody.speed / 10) : 0
+
+            const targetCamX = -carBody.position.x + width * 0.3 - lookAhead
+            const targetCamY = -carBody.position.y + height * 0.6 + Math.abs(carBody.velocity.x) * 2
+
+            cameraPos.current.x += (targetCamX - cameraPos.current.x) * 0.05 // Smoother follow
+            cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
+
+            // Apply Shake
+            const renderCamX = cameraPos.current.x + speedShake
+            const renderCamY = cameraPos.current.y + speedShake
 
             ctx.save()
 
             // Sky & Background (Parallax)
+            // Sky & Background (Parallax)
             const gradient = ctx.createLinearGradient(0, 0, 0, height)
-            if (trackType === 'highway') { gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(1, '#24243e') }
-            else if (trackType === 'racing') { gradient.addColorStop(0, '#1a2a6c'); gradient.addColorStop(1, '#b21f1f'); gradient.addColorStop(1, '#fdbb2d') }
-            else { gradient.addColorStop(0, '#4facfe'); gradient.addColorStop(1, '#00f2fe') }
+            if (trackType === 'highway') {
+                gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(0.5, '#302b63'); gradient.addColorStop(1, '#24243e'); // Night
+            } else if (trackType === 'racing') {
+                gradient.addColorStop(0, '#1a2a6c'); gradient.addColorStop(0.5, '#b21f1f'); gradient.addColorStop(1, '#fdbb2d'); // Sunset
+            } else {
+                gradient.addColorStop(0, '#2980B9'); gradient.addColorStop(1, '#6DD5FA'); // Day
+            }
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, height)
+
+            // Stars / Clouds
+            ctx.save()
+            if (trackType === 'highway') {
+                ctx.fillStyle = '#FFF';
+                for (let i = 0; i < 50; i++) {
+                    const sX = ((i * 137) % width + renderCamX * 0.02) % width
+                    const sY = ((i * 241) % (height / 2))
+                    ctx.globalAlpha = Math.random() * 0.5 + 0.5
+                    ctx.beginPath(); ctx.arc(sX, sY, Math.random() * 1.5, 0, Math.PI * 2); ctx.fill()
+                }
+            } else {
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                for (let i = 0; i < 10; i++) {
+                    const cX = ((i * 300) + renderCamX * 0.1) % (width + 400) - 200
+                    const cY = (i * 50) % 200
+                    ctx.beginPath(); ctx.arc(cX, cY, 40, 0, Math.PI * 2); ctx.arc(cX + 30, cY - 10, 50, 0, Math.PI * 2); ctx.arc(cX + 60, cY, 40, 0, Math.PI * 2); ctx.fill()
+                }
+            }
+            ctx.restore()
 
             // Sun/Moon
             ctx.beginPath();
@@ -398,7 +435,7 @@ export default function Game2D() {
             ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 40; ctx.fill(); ctx.shadowBlur = 0
 
             // Parallax Layers
-            const bgOffset = cameraPos.current.x * 0.05
+            const bgOffset = renderCamX * 0.05
             ctx.save()
             if (trackType === 'hilly') {
                 ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.moveTo(0, height);
@@ -418,8 +455,8 @@ export default function Game2D() {
             ctx.restore()
 
             // Terrain
-            ctx.translate(cameraPos.current.x, cameraPos.current.y)
-            const startRenderX = -cameraPos.current.x - 100, endRenderX = -cameraPos.current.x + width + 100
+            ctx.translate(renderCamX, renderCamY)
+            const startRenderX = -renderCamX - 100, endRenderX = -renderCamX + width + 100
 
             ctx.beginPath();
             ctx.moveTo(startRenderX, getTerrainHeight(startRenderX));
@@ -479,18 +516,135 @@ export default function Game2D() {
             Composite.allBodies(world).forEach(body => {
                 if (body.label === 'ground') return
                 ctx.save(); ctx.translate(body.position.x, body.position.y); ctx.rotate(body.angle)
-                if (body.label === 'wheel') { ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2); ctx.fillStyle = '#1a1a1a'; ctx.fill(); ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fillStyle = '#555'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(15, 0); ctx.moveTo(0, -15); ctx.lineTo(0, 15); ctx.strokeStyle = '#ccc'; ctx.lineWidth = 4; ctx.stroke() }
+
+                if (body.label === 'wheel') {
+                    // Rotating Wheel
+                    ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.fillStyle = '#111'; ctx.fill();
+                    ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.stroke();
+
+                    // Rim
+                    ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                    ctx.fillStyle = '#444'; ctx.fill();
+
+                    // Rotating Spokes
+                    ctx.save();
+                    ctx.rotate(body.position.x * 0.1); // Rotation based on distance
+                    ctx.strokeStyle = '#888'; ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(15, 0); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 15); ctx.stroke();
+                    ctx.restore();
+                }
                 else if (body.label === 'carBody') {
-                    const w = 140, h = 40, color = currentCarConfig.current.color
-                    if (currentCarConfig.current.id === 'f1') { ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(60, 5); ctx.lineTo(20, -10); ctx.lineTo(-40, -10); ctx.lineTo(-60, -5); ctx.lineTo(-60, 15); ctx.lineTo(40, 15); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.stroke(); ctx.fillStyle = '#1a237e'; ctx.fillRect(-20, 0, 40, 15); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-10, -10, 8, 0, Math.PI, true); ctx.fill(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.moveTo(60, 10); ctx.lineTo(75, 15); ctx.lineTo(75, 5); ctx.lineTo(60, 5); ctx.fill(); ctx.fillRect(-75, -25, 5, 25); ctx.fillRect(-80, -35, 20, 10) }
-                    else if (currentCarConfig.current.id === 'bullet') { ctx.strokeStyle = '#37474F'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(-15, 10); ctx.lineTo(-25, -5); ctx.lineTo(15, -15); ctx.closePath(); ctx.stroke(); ctx.fillStyle = '#78909C'; ctx.fillRect(-15, -5, 20, 15); ctx.fillStyle = '#546E7A'; ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -25, 35, -10); ctx.lineTo(15, -10); ctx.fill(); ctx.fillStyle = '#3E2723'; ctx.beginPath(); ctx.moveTo(-25, -5); ctx.quadraticCurveTo(-15, -10, 0, -5); ctx.lineTo(-25, -5); ctx.fill(); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-5, -30, 8, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#263238'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-5, -22); ctx.quadraticCurveTo(10, -25, 20, -10); ctx.stroke() }
-                    else { ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(w / 2, h / 2); ctx.lineTo(w / 2, 0); ctx.lineTo(w / 4, -h / 2); ctx.lineTo(-w / 3, -h / 2); ctx.lineTo(-w / 2, 0); ctx.lineTo(-w / 2, h / 2); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = '#81D4FA'; ctx.beginPath(); ctx.moveTo(w / 4 - 5, -h / 2 + 5); ctx.lineTo(-w / 3 + 5, -h / 2 + 5); ctx.lineTo(-w / 2 + 10, 0); ctx.lineTo(w / 4 - 5, 0); ctx.closePath(); ctx.fill() }
-                } else if (body.label === 'fuel') { ctx.fillStyle = '#FFC107'; ctx.beginPath(); ctx.rect(-15, -20, 30, 40); ctx.fill(); ctx.strokeStyle = '#FF6F00'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = 'black'; ctx.font = 'bold 12px Arial'; ctx.fillText('FUEL', -14, 5) }
-                else if (body.label === 'coin') { ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#FFA000'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = '#B8860B'; ctx.font = 'bold 20px Arial'; ctx.fillText('$', -6, 7) }
+                    const color = currentCarConfig.current.color
+
+                    // Shadow
+                    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 20;
+
+                    if (currentCarConfig.current.id === 'f1') {
+                        // F1 Body
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.moveTo(70, 5); ctx.lineTo(20, -10); ctx.lineTo(-40, -10); // Nose to Cockpit
+                        ctx.lineTo(-60, -20); ctx.lineTo(-70, -20); ctx.lineTo(-70, 10); // Rear Wing mount
+                        ctx.lineTo(40, 15); ctx.closePath();
+                        ctx.fill();
+
+                        // Sidepods
+                        ctx.fillStyle = '#1a237e'; ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(10, 0); ctx.lineTo(10, 15); ctx.lineTo(-30, 15); ctx.fill();
+
+                        // Driver Helmet
+                        ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(-10, -12, 6, 0, Math.PI * 2); ctx.fill();
+
+                        // Rear Wing
+                        ctx.fillStyle = '#111'; ctx.fillRect(-80, -35, 20, 5); ctx.fillRect(-75, -35, 5, 25);
+
+                        // Front Wing
+                        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.moveTo(60, 10); ctx.lineTo(80, 15); ctx.lineTo(80, 5); ctx.lineTo(60, 5); ctx.fill();
+                    }
+                    else if (currentCarConfig.current.id === 'bullet') {
+                        // Bike Frame
+                        ctx.strokeStyle = '#37474F'; ctx.lineWidth = 5;
+                        ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(-15, 10); ctx.lineTo(-25, -5); ctx.lineTo(15, -15); ctx.closePath(); ctx.stroke();
+
+                        // Fuel Tank
+                        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -25, 35, -10); ctx.lineTo(15, -10); ctx.fill();
+
+                        // Seat
+                        ctx.fillStyle = '#3E2723'; ctx.beginPath(); ctx.moveTo(-25, -5); ctx.quadraticCurveTo(-15, -10, 0, -5); ctx.lineTo(-25, -5); ctx.fill();
+
+                        // Rider
+                        ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-5, -25, 8, 0, Math.PI * 2); ctx.fill(); // Head
+                        ctx.strokeStyle = '#263238'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-5, -18); ctx.quadraticCurveTo(10, -25, 20, -10); ctx.stroke(); // Body
+                    }
+                    else {
+                        // Rally Car Body
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.moveTo(60, 10); ctx.lineTo(50, -5); ctx.lineTo(20, -20); // Hood to Roof
+                        ctx.lineTo(-30, -20); ctx.lineTo(-50, -5); ctx.lineTo(-60, 10); // Roof to Trunk
+                        ctx.lineTo(-60, 20); ctx.lineTo(60, 20); ctx.closePath();
+                        ctx.fill();
+
+                        // Windows
+                        ctx.fillStyle = '#81D4FA';
+                        ctx.beginPath(); ctx.moveTo(45, -5); ctx.lineTo(20, -17); ctx.lineTo(-25, -17); ctx.lineTo(-45, -5); ctx.closePath(); ctx.fill();
+
+                        // Spoiler
+                        ctx.fillStyle = '#D32F2F'; ctx.fillRect(-65, -15, 5, 15); ctx.fillRect(-70, -18, 20, 5);
+
+                        // Decals
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.moveTo(10, -20); ctx.lineTo(-10, 20); ctx.lineTo(-30, 20); ctx.lineTo(-10, -20); ctx.fill();
+                    }
+                    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                }
+                else if (body.label === 'fuel') {
+                    ctx.fillStyle = '#FFC107'; ctx.beginPath(); ctx.roundRect(-15, -20, 30, 40, 5); ctx.fill();
+                    ctx.strokeStyle = '#FF6F00'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = 'black'; ctx.font = 'bold 10px Orbitron'; ctx.fillText('FUEL', -12, 5);
+                }
+                else if (body.label === 'coin') {
+                    ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#FFA000'; ctx.lineWidth = 2; ctx.stroke();
+                    ctx.fillStyle = '#B8860B'; ctx.font = 'bold 20px Orbitron'; ctx.fillText('$', -6, 7);
+                    // Sparkle
+                    if (Math.random() > 0.9) { ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(10, -10, 3, 0, Math.PI * 2); ctx.fill(); }
+                }
                 ctx.restore()
             })
-            if (Math.abs(carBody.speed) > 20) particles.push({ x: carBody.position.x - Math.cos(carBody.angle) * 40, y: carBody.position.y - Math.sin(carBody.angle) * 40, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 1.0, color: currentCarConfig.current.color })
-            for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05; if (p.life <= 0) particles.splice(i, 1); else { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(p.x, p.y, 3 + p.life * 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; ctx.globalAlpha = 1.0 } }
+
+            // Particle System 2.0
+            if (Math.abs(carBody.speed) > 10) {
+                // Smoke/Dust
+                if (Math.random() > 0.5) {
+                    particles.push({
+                        x: carBody.position.x - Math.cos(carBody.angle) * 40,
+                        y: carBody.position.y + 20,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() * -2) - 1,
+                        life: 1.0,
+                        type: trackType === 'hilly' ? 'dust' : 'smoke',
+                        size: Math.random() * 5 + 5
+                    })
+                }
+            }
+
+            // Render Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02; p.size += 0.2;
+
+                if (p.life <= 0) particles.splice(i, 1);
+                else {
+                    ctx.globalAlpha = p.life;
+                    if (p.type === 'dust') ctx.fillStyle = '#795548';
+                    else if (p.type === 'smoke') ctx.fillStyle = '#9E9E9E';
+                    else ctx.fillStyle = p.color;
+
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1.0
+                }
+            }
             ctx.restore(); animationFrameId = requestAnimationFrame(render)
         }
         const runner = Runner.create(); Runner.run(runner, engine); render()
