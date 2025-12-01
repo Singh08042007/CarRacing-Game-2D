@@ -173,27 +173,11 @@ export default function Game2D() {
             high_score: newHighScore !== undefined ? newHighScore : highScore,
             unlocked_cars: newUnlockedCars !== undefined ? newUnlockedCars : unlockedCars,
             updated_at: new Date(),
-        }
+            cameraPos.current = { x: 0, y: 0 }
 
-        const { error } = await supabase.from('profiles').upsert(updates)
-        if (error) console.error('Error updating profile:', error)
-    }
-
-    const startGame = (selectedTrackType) => {
-        setTrackType(selectedTrackType)
-        setGameState('playing')
-        setRestartKey(prev => prev + 1)
-        fuel.current = 100
-        isGameOver.current = false
-        gearRef.current = 1
-        collectedCoinsSession.current = 0
-        lastRewardDist.current = 0
-        currentCarConfig.current = CARS[selectedCarId.toUpperCase()] || CARS.RALLY
-        cameraPos.current = { x: 0, y: 0 }
-
-        if (gameOverRef.current) {
-            gameOverRef.current.style.display = 'none'
-        }
+        if(gameOverRef.current) {
+                gameOverRef.current.style.display = 'none'
+            }
     }
 
     const buyCar = (carId) => {
@@ -1094,16 +1078,16 @@ export default function Game2D() {
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyW') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyW') }}
-                            className="w-16 h-16 rounded-lg bg-cyan-500/30 border border-cyan-400 backdrop-blur-sm flex items-center justify-center active:bg-cyan-500/60 active:scale-95 transition-all"
+                            className="w-14 h-14 rounded-lg bg-cyan-500/30 border border-cyan-400 backdrop-blur-sm flex items-center justify-center active:bg-cyan-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-2xl text-white font-black">▲</span>
+                            <span className="text-xl text-white font-black">▲</span>
                         </button>
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyS') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyS') }}
-                            className="w-16 h-16 rounded-lg bg-purple-500/30 border border-purple-400 backdrop-blur-sm flex items-center justify-center active:bg-purple-500/60 active:scale-95 transition-all"
+                            className="w-14 h-14 rounded-lg bg-purple-500/30 border border-purple-400 backdrop-blur-sm flex items-center justify-center active:bg-purple-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-2xl text-white font-black">▼</span>
+                            <span className="text-xl text-white font-black">▼</span>
                         </button>
                     </div>
 
@@ -1111,18 +1095,18 @@ export default function Game2D() {
                     <button
                         onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
                         onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
-                        className="w-20 h-20 rounded-xl bg-red-500/30 border-2 border-red-400 backdrop-blur-sm flex items-center justify-center active:bg-red-500/60 active:scale-95 transition-all"
+                        className="w-16 h-16 rounded-xl bg-red-500/30 border-2 border-red-400 backdrop-blur-sm flex items-center justify-center active:bg-red-500/60 active:scale-95 transition-all"
                     >
-                        <span className="text-sm text-white font-black font-orbitron">BR</span>
+                        <span className="text-xs text-white font-black font-orbitron">BR</span>
                     </button>
 
                     {/* Right: Gas */}
                     <button
                         onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
                         onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
-                        className="w-24 h-32 rounded-2xl bg-green-500/30 border-2 border-green-400 backdrop-blur-sm flex items-center justify-center active:bg-green-500/60 active:scale-95 transition-all"
+                        className="w-20 h-24 rounded-2xl bg-green-500/30 border-2 border-green-400 backdrop-blur-sm flex items-center justify-center active:bg-green-500/60 active:scale-95 transition-all"
                     >
-                        <span className="text-xl text-white font-black font-orbitron">GAS</span>
+                        <span className="text-base text-white font-black font-orbitron">GAS</span>
                     </button>
                 </div>
             </div>
