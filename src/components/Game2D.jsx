@@ -902,7 +902,6 @@ export default function Game2D() {
                     </div>
                 )
             )}
-            }
 
             {/* GARAGE */}
             {
