@@ -1092,45 +1092,47 @@ export default function Game2D() {
                 )
             }
             {/* Mobile Touch Controls - Optimized for new mobile UI */}
-            <div className={`absolute bottom-0 left-0 right-0 pointer-events-none md:hidden z-40 px-4 ${isLandscape ? 'pb-32' : 'pb-8'}`}>
-                <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
-                    {/* Left: Gear Shift */}
-                    <div className="flex gap-2">
+            {isMobile && (
+                <div className={`absolute bottom-0 left-0 right-0 pointer-events-none z-40 px-4 ${isLandscape ? 'pb-32' : 'pb-8'}`}>
+                    <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
+                        {/* Left: Gear Shift */}
+                        <div className="flex gap-2">
+                            <button
+                                onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyW') }}
+                                onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyW') }}
+                                className="w-14 h-14 rounded-lg bg-cyan-500/30 border border-cyan-400 backdrop-blur-sm flex items-center justify-center active:bg-cyan-500/60 active:scale-95 transition-all"
+                            >
+                                <span className="text-xl text-white font-black">▲</span>
+                            </button>
+                            <button
+                                onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyS') }}
+                                onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyS') }}
+                                className="w-14 h-14 rounded-lg bg-purple-500/30 border border-purple-400 backdrop-blur-sm flex items-center justify-center active:bg-purple-500/60 active:scale-95 transition-all"
+                            >
+                                <span className="text-xl text-white font-black">▼</span>
+                            </button>
+                        </div>
+
+                        {/* Center: Brake */}
                         <button
-                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyW') }}
-                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyW') }}
-                            className="w-14 h-14 rounded-lg bg-cyan-500/30 border border-cyan-400 backdrop-blur-sm flex items-center justify-center active:bg-cyan-500/60 active:scale-95 transition-all"
+                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
+                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
+                            className="w-16 h-16 rounded-xl bg-red-500/30 border-2 border-red-400 backdrop-blur-sm flex items-center justify-center active:bg-red-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-xl text-white font-black">▲</span>
+                            <span className="text-xs text-white font-black font-orbitron">BR</span>
                         </button>
+
+                        {/* Right: Gas */}
                         <button
-                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyS') }}
-                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyS') }}
-                            className="w-14 h-14 rounded-lg bg-purple-500/30 border border-purple-400 backdrop-blur-sm flex items-center justify-center active:bg-purple-500/60 active:scale-95 transition-all"
+                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
+                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
+                            className="w-20 h-24 rounded-2xl bg-green-500/30 border-2 border-green-400 backdrop-blur-sm flex items-center justify-center active:bg-green-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-xl text-white font-black">▼</span>
+                            <span className="text-base text-white font-black font-orbitron">GAS</span>
                         </button>
                     </div>
-
-                    {/* Center: Brake */}
-                    <button
-                        onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
-                        onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
-                        className="w-16 h-16 rounded-xl bg-red-500/30 border-2 border-red-400 backdrop-blur-sm flex items-center justify-center active:bg-red-500/60 active:scale-95 transition-all"
-                    >
-                        <span className="text-xs text-white font-black font-orbitron">BR</span>
-                    </button>
-
-                    {/* Right: Gas */}
-                    <button
-                        onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
-                        onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
-                        className="w-20 h-24 rounded-2xl bg-green-500/30 border-2 border-green-400 backdrop-blur-sm flex items-center justify-center active:bg-green-500/60 active:scale-95 transition-all"
-                    >
-                        <span className="text-base text-white font-black font-orbitron">GAS</span>
-                    </button>
                 </div>
-            </div>
+            )}
         </div>
     )
 }
