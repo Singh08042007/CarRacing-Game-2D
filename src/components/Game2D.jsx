@@ -9,8 +9,8 @@ import musicUrl from '../assets/sounds/music.mp3'
 
 const CARS = {
     RALLY: { id: 'rally', name: 'RALLY CAR', price: 0, maxSpeed: 170, gears: 6, color: '#D32F2F', wheelSpeedMultipliers: [0.3, 0.5, 0.7, 0.9, 1.2, 1.8], speedRanges: [35, 55, 75, 95, 115, 175], density: 0.005, downforce: 0, stiffness: 0.2 },
-    F1: { id: 'f1', name: 'REDBULL F1', price: 10, maxSpeed: 360, gears: 9, color: '#1a237e', wheelSpeedMultipliers: [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.0, 3.0, 4.5], speedRanges: [40, 70, 90, 110, 130, 150, 210, 280, 360], density: 0.005, downforce: 0.5, stiffness: 0.6 },
-    BULLET: { id: 'bullet', name: 'BULLET BIKE', price: 5, maxSpeed: 110, gears: 5, color: '#263238', wheelSpeedMultipliers: [0.25, 0.45, 0.65, 0.85, 1.1], speedRanges: [30, 50, 70, 90, 110], density: 0.008, downforce: 0.1, stiffness: 0.4 }
+    F1: { id: 'f1', name: 'REDBULL F1', price: 50, maxSpeed: 360, gears: 9, color: '#1a237e', wheelSpeedMultipliers: [0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2.0, 3.0, 4.5], speedRanges: [40, 70, 90, 110, 130, 150, 210, 280, 360], density: 0.005, downforce: 0.5, stiffness: 0.6 },
+    BULLET: { id: 'bullet', name: 'BULLET BIKE', price: 25, maxSpeed: 110, gears: 5, color: '#263238', wheelSpeedMultipliers: [0.25, 0.45, 0.65, 0.85, 1.1], speedRanges: [30, 50, 70, 90, 110], density: 0.008, downforce: 0.1, stiffness: 0.4 }
 }
 
 export default function Game2D() {
