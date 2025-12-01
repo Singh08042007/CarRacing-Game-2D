@@ -104,415 +104,17 @@ export default function Game2D() {
     const isGameOver = useRef(false)
     const carBodyRef = useRef(null)
     const gearRef = useRef(1)
-})
-        })
-
-// 6. Input Handling
-const handleKeyDown = (e) => {
-    keys.current[e.code] = true
-    handleShift(e.code)
+    0 %, 100 % { box- shadow: 0 0 20px rgba(255, 215, 0, 0.5); transform: scale(1);
 }
-const handleKeyUp = (e) => keys.current[e.code] = false
-
-const handleShift = (code) => {
-    const now = Date.now()
-    if (now - lastShiftTime.current > 250) {
-        if (code === 'KeyW') { // Shift Up
-            if (gearRef.current < currentCarConfig.current.gears) {
-                gearRef.current++
-                lastShiftTime.current = now
-            }
-        }
-        if (code === 'KeyS') { // Shift Down
-            if (gearRef.current > 1) {
-                gearRef.current--
-                lastShiftTime.current = now
-            }
-        }
-    }
-}
-
-window.addEventListener('keydown', handleKeyDown)
-window.addEventListener('keyup', handleKeyUp)
-
-// 7. Physics Loop
-Events.on(engine, 'beforeUpdate', () => {
-    if (isGameOver.current) return
-
-    // --- SAFETY CHECKS ---
-
-    // 1. NaN / Invalid Position Check
-    if (!carBody.position || isNaN(carBody.position.x) || isNaN(carBody.position.y) || isNaN(carBody.speed)) {
-        console.warn("Physics instability detected (NaN)! Resetting car.")
-        Body.setPosition(carBody, { x: 300, y: getTerrainHeight(300) - 100 })
-        Body.setVelocity(carBody, { x: 0, y: 0 })
-        Body.setAngularVelocity(carBody, 0)
-        Body.setAngle(carBody, 0)
-        return
-    }
-
-    // 2. Velocity Cap (Prevents 50,000 km/h glitches)
-    const MAX_PHYSICS_SPEED = 100; // Approx 500 km/h
-    if (carBody.speed > MAX_PHYSICS_SPEED) {
-        const ratio = MAX_PHYSICS_SPEED / carBody.speed;
-        Body.setVelocity(carBody, {
-            x: carBody.velocity.x * ratio,
-            y: carBody.velocity.y * ratio
-        });
-    }
-
-    // 3. World Bounds Check (Prevents falling through ground)
-    const terrainY = getTerrainHeight(carBody.position.x);
-    if (carBody.position.y > terrainY + 500) { // If fallen way below terrain
-        console.warn("Car fell through world! Resetting.");
-        Body.setPosition(carBody, { x: carBody.position.x, y: terrainY - 100 });
-        Body.setVelocity(carBody, { x: 0, y: 0 });
-        Body.setAngle(carBody, 0);
-    }
-
-    const speed = Math.round(carBody.speed * 5)
-    const dist = Math.floor(carBody.position.x / 100)
-    const currentGear = gearRef.current
-    const config = currentCarConfig.current
-
-    // --- GAMEPLAY LOGIC ---
-
-    // 1. Flip Death
-    if (Math.abs(carBody.angle) > 2.0) {
-        if (carBody.position.y > terrainY - 60) {
-            handleGameOver("CAR FLIPPED!", dist)
-            return
-        }
-    }
-
-    // 2. Distance Rewards
-    if (dist > lastRewardDist.current + 100) {
-        lastRewardDist.current = Math.floor(dist / 100) * 100
-        setCoins(prev => prev + 10)
-        collectedCoinsSession.current += 10
-    }
-
-    // Apply Downforce
-    if (config.downforce) {
-        const downforceForce = carBody.mass * (speed / 1000) * config.downforce
-        const maxDownforce = carBody.mass * 2
-        const clampedForce = Math.min(downforceForce, maxDownforce)
-        Body.applyForce(carBody, carBody.position, { x: 0, y: clampedForce })
-    }
-
-    // Gear Logic
-    const gearIndex = currentGear - 1
-    const wheelSpeed = config.wheelSpeedMultipliers[gearIndex] || 0.3
-    const maxSpeedForGear = config.speedRanges[gearIndex] || 30
-
-    if (fuel.current > 0) {
-        if (keys.current['KeyD'] || keys.current['ArrowRight']) {
-            if (speed < maxSpeedForGear) {
-                Body.setAngularVelocity(wheelA, wheelSpeed)
-                Body.setAngularVelocity(wheelB, wheelSpeed)
-                fuel.current -= 0.05
-            }
-        }
-        if (keys.current['KeyA'] || keys.current['ArrowLeft']) {
-            Body.setAngularVelocity(wheelA, -0.3)
-            Body.setAngularVelocity(wheelB, -0.3)
-            fuel.current -= 0.05
-        }
-    }
-
-    // UI Updates
-    if (scoreRef.current) {
-        scoreRef.current.innerText = `${dist}m`
-    }
-
-    if (speedRef.current) speedRef.current.innerText = `${speed} km/h`
-    if (gearRefDisplay.current) gearRefDisplay.current.innerText = `${currentGear}/${config.gears}`
-    if (fuelBarRef.current) fuelBarRef.current.style.width = `${fuel.current}%`
-
-    // Update both coin refs if they exist
-    if (coinRefHUD.current) coinRefHUD.current.innerText = `${collectedCoinsSession.current}`
-    if (coinRefGameOver.current) coinRefGameOver.current.innerText = `${collectedCoinsSession.current}`
-
-    // Distance Bar Update (Progress to next 100m)
-    const progress = (dist % 100) / 100 * 100
-    const distBar = document.getElementById('dist-bar-fill')
-    if (distBar) distBar.style.width = `${progress}%`
-
-    if (fuel.current <= 0 && Math.abs(carBody.speed) < 0.1) {
-        handleGameOver("OUT OF FUEL!", dist)
-    }
-})
-
-// 8. Render Loop
-const canvas = canvasRef.current
-const ctx = canvas.getContext('2d')
-let animationFrameId
-
-// Particle System
-let particles = []
-
-const render = () => {
-    const width = canvas.width = window.innerWidth
-    const height = canvas.height = window.innerHeight
-
-    const targetCamX = -carBody.position.x + width * 0.3
-    const targetCamY = -carBody.position.y + height * 0.6
-
-    cameraPos.current.x += (targetCamX - cameraPos.current.x) * 0.1
-    cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
-
-    ctx.save()
-
-    // Sky
-    const gradient = ctx.createLinearGradient(0, 0, 0, height)
-    if (trackType === 'highway') {
-        gradient.addColorStop(0, '#0f0c29')
-        gradient.addColorStop(0.5, '#302b63')
-        gradient.addColorStop(1, '#24243e')
-    } else {
-        gradient.addColorStop(0, '#000000')
-        gradient.addColorStop(1, '#1a1a2e')
-    }
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
-
-    // Sun
-    ctx.beginPath()
-    ctx.arc(width - 100, 100, 60, 0, Math.PI * 2)
-    const sunGrad = ctx.createLinearGradient(width - 100, 40, width - 100, 160)
-    sunGrad.addColorStop(0, '#FFD700')
-    sunGrad.addColorStop(1, '#FF00FF')
-    ctx.fillStyle = sunGrad
-    ctx.shadowColor = '#FF00FF'
-    ctx.shadowBlur = 50
-    ctx.fill()
-    ctx.shadowBlur = 0
-
-    // Background Parallax
-    ctx.save()
-    const bgSpeed = 0.05
-    const bgOffset = cameraPos.current.x * bgSpeed
-
-    if (trackType === 'hilly') {
-        ctx.fillStyle = '#1a1a1a'
-        ctx.beginPath()
-        ctx.moveTo(0, height)
-        for (let i = 0; i < width * 2; i += 200) {
-            const x = (i - bgOffset) % (width * 2) - 200
-            ctx.lineTo(x + 100, height - 300)
-            ctx.lineTo(x + 200, height)
-        }
-        ctx.fill()
-        ctx.strokeStyle = '#00FF00'
-        ctx.lineWidth = 2
-        ctx.stroke()
-    } else if (trackType === 'highway') {
-        ctx.fillStyle = '#000'
-        for (let i = 0; i < 50; i++) {
-            const x = ((i * 100) + bgOffset) % (width * 2) - 100
-            const h = 100 + (i * 137) % 300
-            ctx.fillRect(x, height - h, 80, h)
-            ctx.strokeStyle = '#00FFFF'
-            ctx.lineWidth = 1
-            ctx.strokeRect(x, height - h, 80, h)
-            ctx.fillStyle = Math.random() > 0.5 ? '#FF00FF' : '#00FFFF'
-            for (let w = 0; w < 5; w++) {
-                if ((i + w) % 3 === 0) ctx.fillRect(x + 10 + (w * 10) % 40, height - h + 20 + (w * 40) % h, 5, 10)
-            }
-            ctx.fillStyle = '#000'
-        }
-    } else if (trackType === 'racing') {
-        ctx.fillStyle = '#111'
-        for (let i = 0; i < 20; i++) {
-            const x = ((i * 400) - bgOffset) % (width * 2) - 200
-            ctx.fillRect(x, height - 200, 300, 200)
-            ctx.fillStyle = '#FF0000'
-            ctx.beginPath(); ctx.moveTo(x, height - 200); ctx.lineTo(x + 300, height - 250); ctx.lineTo(x + 300, height - 200); ctx.fill()
-            ctx.fillStyle = '#111'
-        }
-    }
-    ctx.restore()
-
-    ctx.translate(cameraPos.current.x, cameraPos.current.y)
-
-    // Terrain
-    const startRenderX = -cameraPos.current.x - 100
-    const endRenderX = -cameraPos.current.x + width + 100
-
-    ctx.beginPath()
-    ctx.moveTo(startRenderX, getTerrainHeight(startRenderX))
-    for (let x = startRenderX; x <= endRenderX; x += 20) {
-        ctx.lineTo(x, getTerrainHeight(x))
-    }
-    ctx.lineTo(endRenderX, getTerrainHeight(endRenderX) + 1000)
-    ctx.lineTo(startRenderX, getTerrainHeight(startRenderX) + 1000)
-    ctx.closePath()
-
-    ctx.fillStyle = '#050505'
-    ctx.fill()
-
-    ctx.lineWidth = 2
-    ctx.strokeStyle = trackType === 'racing' ? '#FF0000' : (trackType === 'highway' ? '#FF00FF' : '#00FF00')
-    ctx.stroke()
-
-    ctx.beginPath()
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-    ctx.lineWidth = 1
-    for (let x = Math.floor(startRenderX / 100) * 100; x <= endRenderX; x += 100) {
-        ctx.moveTo(x, getTerrainHeight(x))
-        ctx.lineTo(x, getTerrainHeight(x) + 500)
-    }
-    ctx.stroke()
-
-    // Props
-    if (trackType === 'hilly') {
-        const gridStep = 100
-        const startGridX = Math.floor(startRenderX / gridStep) * gridStep
-
-        for (let x = startGridX; x <= endRenderX; x += gridStep) {
-            const rand = Math.sin(x * 12.9898) * 43758.5453
-            const isTree = (rand - Math.floor(rand)) > 0.7
-            const isRock = (rand - Math.floor(rand)) < 0.2
-            const y = getTerrainHeight(x)
-
-            if (isTree) {
-                ctx.fillStyle = '#263238'
-                ctx.fillRect(x, y - 150, 5, 150)
-                ctx.beginPath(); ctx.moveTo(x, y - 150); ctx.lineTo(x + 40, y - 150); ctx.stroke()
-                ctx.fillStyle = '#FF00FF'
-                ctx.shadowColor = '#FF00FF'
-                ctx.shadowBlur = 30
-                ctx.beginPath(); ctx.arc(x + 40, y - 150, 5, 0, Math.PI * 2); ctx.fill()
-                ctx.shadowBlur = 0
-            } else if (isRock) {
-                ctx.fillStyle = '#424242'
-                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 10, y - 15); ctx.lineTo(x + 25, y - 5); ctx.lineTo(x + 30, y); ctx.fill()
-            }
-        }
-    }
-
-    // Bodies
-    const bodies = Composite.allBodies(world)
-    bodies.forEach(body => {
-        if (body.label === 'ground') return
-
-        ctx.save()
-        ctx.translate(body.position.x, body.position.y)
-        ctx.rotate(body.angle)
-
-        if (body.label === 'wheel') {
-            ctx.beginPath()
-            ctx.arc(0, 0, 25, 0, Math.PI * 2)
-            ctx.fillStyle = '#1a1a1a'
-            ctx.fill()
-            ctx.strokeStyle = '#333'
-            ctx.lineWidth = 2
-            ctx.stroke()
-            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fillStyle = '#555'; ctx.fill()
-            ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(15, 0); ctx.moveTo(0, -15); ctx.lineTo(0, 15); ctx.strokeStyle = '#ccc'; ctx.lineWidth = 4; ctx.stroke()
-
-        } else if (body.label === 'carBody') {
-            const w = 140
-            const h = 40
-            const color = currentCarConfig.current.color
-
-            if (currentCarConfig.current.id === 'f1') {
-                ctx.fillStyle = color
-                ctx.beginPath(); ctx.moveTo(60, 5); ctx.lineTo(20, -10); ctx.lineTo(-40, -10); ctx.lineTo(-60, -5); ctx.lineTo(-60, 15); ctx.lineTo(40, 15); ctx.closePath(); ctx.fill()
-                ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.stroke()
-                ctx.fillStyle = '#1a237e'; ctx.fillRect(-20, 0, 40, 15)
-                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-10, -10, 8, 0, Math.PI, true); ctx.fill()
-                ctx.fillStyle = '#222'; ctx.beginPath(); ctx.moveTo(60, 10); ctx.lineTo(75, 15); ctx.lineTo(75, 5); ctx.lineTo(60, 5); ctx.fill()
-                ctx.fillRect(-75, -25, 5, 25); ctx.fillRect(-80, -35, 20, 10)
-
-            } else if (currentCarConfig.current.id === 'bullet') {
-                ctx.strokeStyle = '#37474F'; ctx.lineWidth = 4
-                ctx.beginPath(); ctx.moveTo(25, 0); ctx.lineTo(-15, 10); ctx.lineTo(-25, -5); ctx.lineTo(15, -15); ctx.closePath(); ctx.stroke()
-                ctx.fillStyle = '#78909C'; ctx.fillRect(-15, -5, 20, 15)
-                ctx.fillStyle = '#546E7A'; ctx.beginPath(); ctx.moveTo(15, -15); ctx.quadraticCurveTo(25, -25, 35, -10); ctx.lineTo(15, -10); ctx.fill()
-                ctx.fillStyle = '#3E2723'; ctx.beginPath(); ctx.moveTo(-25, -5); ctx.quadraticCurveTo(-15, -10, 0, -5); ctx.lineTo(-25, -5); ctx.fill()
-                ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(-5, -30, 8, 0, Math.PI * 2); ctx.fill()
-                ctx.strokeStyle = '#263238'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-5, -22); ctx.quadraticCurveTo(10, -25, 20, -10); ctx.stroke()
-
-            } else {
-                ctx.fillStyle = color
-                ctx.beginPath(); ctx.moveTo(w / 2, h / 2); ctx.lineTo(w / 2, 0); ctx.lineTo(w / 4, -h / 2); ctx.lineTo(-w / 3, -h / 2); ctx.lineTo(-w / 2, 0); ctx.lineTo(-w / 2, h / 2); ctx.closePath(); ctx.fill()
-                ctx.strokeStyle = '#222'; ctx.lineWidth = 2; ctx.stroke()
-                ctx.fillStyle = '#81D4FA'; ctx.beginPath(); ctx.moveTo(w / 4 - 5, -h / 2 + 5); ctx.lineTo(-w / 3 + 5, -h / 2 + 5); ctx.lineTo(-w / 2 + 10, 0); ctx.lineTo(w / 4 - 5, 0); ctx.closePath(); ctx.fill()
-            }
-
-        } else if (body.label === 'fuel') {
-            ctx.fillStyle = '#FFC107'
-            ctx.beginPath(); ctx.rect(-15, -20, 30, 40); ctx.fill()
-            ctx.strokeStyle = '#FF6F00'; ctx.lineWidth = 2; ctx.stroke()
-            ctx.fillStyle = 'black'; ctx.font = 'bold 12px Arial'; ctx.fillText('FUEL', -14, 5)
-        } else if (body.label === 'coin') {
-            ctx.fillStyle = '#FFD700'
-            ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI * 2); ctx.fill()
-            ctx.strokeStyle = '#FFA000'; ctx.lineWidth = 2; ctx.stroke()
-            ctx.fillStyle = '#B8860B'; ctx.font = 'bold 20px Arial'; ctx.fillText('$', -6, 7)
-        }
-
-        ctx.restore()
-    })
-
-    // Particles
-    if (Math.abs(carBody.speed) > 20) {
-        particles.push({
-            x: carBody.position.x - Math.cos(carBody.angle) * 40,
-            y: carBody.position.y - Math.sin(carBody.angle) * 40,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 1.0,
-            color: currentCarConfig.current.color
-        })
-    }
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i]
-        p.x += p.vx; p.y += p.vy; p.life -= 0.05
-        if (p.life <= 0) particles.splice(i, 1)
-        else {
-            ctx.globalAlpha = p.life
-            ctx.fillStyle = p.color
-            ctx.shadowColor = p.color
-            ctx.shadowBlur = 10
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3 + p.life * 5, 0, Math.PI * 2); ctx.fill()
-            ctx.shadowBlur = 0; ctx.globalAlpha = 1.0
-        }
-    }
-
-    ctx.restore()
-    animationFrameId = requestAnimationFrame(render)
-}
-
-const runner = Runner.create()
-Runner.run(runner, engine)
-render()
-
-return () => {
-    Runner.stop(runner)
-    cancelAnimationFrame(animationFrameId)
-    window.removeEventListener('keydown', handleKeyDown)
-    window.removeEventListener('keyup', handleKeyUp)
-    cleanupEngine()
-}
-    }, [gameState, trackType, restartKey])
-
-return (
-    <div className="relative w-full h-screen overflow-hidden bg-zinc-900 font-['Rajdhani']">
-        <style>{`
-                @keyframes pulse-glow {
-                    0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); transform: scale(1); }
-                    50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); transform: scale(1.05); }
+50 % { box- shadow: 0 0 40px rgba(255, 215, 0, 0.8); transform: scale(1.05); }
                 }
-                @keyframes slide-up {
+@keyframes slide - up {
                     from { transform: translateY(50px); opacity: 0; }
                     to { transform: translateY(0); opacity: 1; }
-                }
-                .animate-pulse-glow { animation: pulse-glow 2s infinite; }
-                .font-orbitron { font-family: 'Orbitron', sans-serif; }
-            `}</style>
+}
+                .animate - pulse - glow { animation: pulse - glow 2s infinite; }
+                .font - orbitron { font - family: 'Orbitron', sans - serif; }
+`}</style>
 
         {/* AUTHENTICATION */}
         {!session && <Auth onLogin={() => { }} />}
@@ -629,13 +231,13 @@ return (
                             const isSelected = selectedCarId === car.id
 
                             return (
-                                <div key={car.id} className={`relative p-8 rounded-3xl border-2 flex flex-col items-center gap-6 transition-all duration-300 w-80 ${isSelected ? 'border-yellow-400 bg-white/5 scale-105 shadow-[0_0_30px_rgba(255,215,0,0.2)]' : 'border-white/10 bg-black/40 hover:bg-white/5'}`}>
+                                <div key={car.id} className={`relative p - 8 rounded - 3xl border - 2 flex flex - col items - center gap - 6 transition - all duration - 300 w - 80 ${ isSelected ? 'border-yellow-400 bg-white/5 scale-105 shadow-[0_0_30px_rgba(255,215,0,0.2)]' : 'border-white/10 bg-black/40 hover:bg-white/5' } `}>
                                     {isSelected && <div className="absolute top-4 right-4 text-yellow-400 text-xs font-bold border border-yellow-400 px-2 py-1 rounded">EQUIPPED</div>}
 
                                     <div className="text-3xl font-black italic font-orbitron text-center leading-tight">{car.name}</div>
 
                                     <div className="w-full h-32 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800 to-black border border-white/10 shadow-inner">
-                                        <div className="w-16 h-16 rounded-full" style={{ backgroundColor: car.color, boxShadow: `0 0 20px ${car.color}` }}></div>
+                                        <div className="w-16 h-16 rounded-full" style={{ backgroundColor: car.color, boxShadow: `0 0 20px ${ car.color } ` }}></div>
                                     </div>
 
                                     <div className="w-full space-y-2">
@@ -644,7 +246,7 @@ return (
                                             <span className="text-white font-bold">{car.maxSpeed} km/h</span>
                                         </div>
                                         <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                                            <div className="h-full bg-blue-500" style={{ width: `${(car.maxSpeed / 460) * 100}%` }}></div>
+                                            <div className="h-full bg-blue-500" style={{ width: `${ (car.maxSpeed / 460) * 100 }% ` }}></div>
                                         </div>
 
                                         <div className="flex justify-between text-sm text-gray-400 mt-2">
@@ -656,7 +258,7 @@ return (
                                     {isUnlocked ? (
                                         <button
                                             onClick={() => setSelectedCarId(car.id)}
-                                            className={`w-full py-3 rounded-xl font-bold font-orbitron tracking-wider transition-all ${isSelected ? 'bg-yellow-400 text-black shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                            className={`w - full py - 3 rounded - xl font - bold font - orbitron tracking - wider transition - all ${ isSelected ? 'bg-yellow-400 text-black shadow-lg' : 'bg-white/10 text-white hover:bg-white/20' } `}
                                         >
                                             {isSelected ? 'SELECTED' : 'SELECT'}
                                         </button>
@@ -794,7 +396,7 @@ return (
         }
         {/* Mobile Touch Controls - Optimized for new mobile UI */}
         {isMobile && (
-            <div className={`absolute bottom-0 left-0 right-0 pointer-events-none z-40 px-4 w-full ${isLandscape ? 'pb-8' : 'pb-8'}`}>
+            <div className={`absolute bottom - 0 left - 0 right - 0 pointer - events - none z - 40 px - 4 w - full ${ isLandscape ? 'pb-8' : 'pb-8' } `}>
                 <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
                     {/* Left: Gear Shift */}
                     <div className="flex gap-2">
