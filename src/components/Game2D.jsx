@@ -165,7 +165,17 @@ export default function Game2D() {
         }
     }
 
-    const handleTouchStart = (key) => { keys.current[key] = true }
+    const handleShift = (code) => {
+        const now = Date.now()
+        if (now - lastShiftTime.current > 250) {
+            if (code === 'KeyW' && gearRef.current < currentCarConfig.current.gears) { gearRef.current++; lastShiftTime.current = now }
+            if (code === 'KeyS' && gearRef.current > 1) { gearRef.current--; lastShiftTime.current = now }
+        }
+    }
+    const handleTouchStart = (key) => {
+        keys.current[key] = true
+        if (key === 'KeyW' || key === 'KeyS') handleShift(key)
+    }
     const handleTouchEnd = (key) => { keys.current[key] = false }
     const handleGameOver = (reason, dist) => {
         isGameOver.current = true
@@ -319,17 +329,7 @@ export default function Game2D() {
         })
         const handleKeyDown = (e) => { keys.current[e.code] = true; handleShift(e.code) }
         const handleKeyUp = (e) => keys.current[e.code] = false
-        const handleTouchStart = (key) => {
-            keys.current[key] = true
-            if (key === 'KeyW' || key === 'KeyS') handleShift(key)
-        }
-        const handleShift = (code) => {
-            const now = Date.now()
-            if (now - lastShiftTime.current > 250) {
-                if (code === 'KeyW' && gearRef.current < currentCarConfig.current.gears) { gearRef.current++; lastShiftTime.current = now }
-                if (code === 'KeyS' && gearRef.current > 1) { gearRef.current--; lastShiftTime.current = now }
-            }
-        }
+
         window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp)
 
         Events.on(engine, 'beforeUpdate', () => {
@@ -772,7 +772,7 @@ export default function Game2D() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-zinc-900 text-white bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-900 to-black">
                     {/* Mobile Back Button */}
                     <button onClick={() => setGameState('menu')} className="absolute top-4 left-4 z-50 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full backdrop-blur-md border border-white/20 text-2xl active:scale-95 transition-all md:hidden">←</button>
-                    
+
                     <h2 className="text-7xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-12 font-orbitron drop-shadow-lg">GARAGE</h2>
                     <div className="text-yellow-400 font-bold text-3xl mb-12 font-orbitron bg-black/50 px-8 py-4 rounded-full border border-yellow-500/30">YOUR COINS: <span className="text-white">{coins}</span></div>
                     <div className="flex gap-8 overflow-x-auto p-8 max-w-full">
