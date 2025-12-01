@@ -98,36 +98,17 @@ export default function Game2D() {
         }
     }, [])
 
-
-    // Physics State Refs (for loop access)
-    const fuel = useRef(100)
-    const isGameOver = useRef(false)
-    const carBodyRef = useRef(null)
-    const gearRef = useRef(1)
-    0 %, 100 % { box- shadow: 0 0 20px rgba(255, 215, 0, 0.5); transform: scale(1);
-}
-50 % { box- shadow: 0 0 40px rgba(255, 215, 0, 0.8); transform: scale(1.05); }
-                }
-@keyframes slide - up {
-                    from { transform: translateY(50px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-}
-                .animate - pulse - glow { animation: pulse - glow 2s infinite; }
-                .font - orbitron { font - family: 'Orbitron', sans - serif; }
-`}</style>
-
-        {/* AUTHENTICATION */}
-        {!session && <Auth onLogin={() => { }} />}
-
-        {/* LOADING OVERLAY */}
-        {session && loadingData && (
+    {
+        session && loadingData && (
             <div className="absolute inset-0 flex items-center justify-center z-[60] bg-black/80 backdrop-blur-sm text-white font-orbitron text-2xl animate-pulse">
                 SYNCING PROFILE DATA...
             </div>
-        )}
+        )
+    }
 
-        {/* MAIN MENU - Conditional Mobile/Desktop */}
-        {gameState === 'menu' && (
+    {/* MAIN MENU - Conditional Mobile/Desktop */ }
+    {
+        gameState === 'menu' && (
             isMobile ? (
                 // MOBILE MENU - Simple & Clean
                 <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-gradient-to-b from-gray-900 via-black to-gray-900 p-6">
@@ -214,189 +195,191 @@ export default function Game2D() {
                     </div>
                 </div>
             )
-        )}
+        )
+    }
 
-        {/* GARAGE */}
-        {
-            gameState === 'garage' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-zinc-900 text-white bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-900 to-black">
-                    <h2 className="text-7xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-12 font-orbitron drop-shadow-lg">GARAGE</h2>
-                    <div className="text-yellow-400 font-bold text-3xl mb-12 font-orbitron bg-black/50 px-8 py-4 rounded-full border border-yellow-500/30">
-                        YOUR COINS: <span className="text-white">{coins}</span>
-                    </div>
-
-                    <div className="flex gap-8 overflow-x-auto p-8 max-w-full">
-                        {Object.values(CARS).map(car => {
-                            const isUnlocked = unlockedCars.includes(car.id)
-                            const isSelected = selectedCarId === car.id
-
-                            return (
-                                <div key={car.id} className={`relative p - 8 rounded - 3xl border - 2 flex flex - col items - center gap - 6 transition - all duration - 300 w - 80 ${ isSelected ? 'border-yellow-400 bg-white/5 scale-105 shadow-[0_0_30px_rgba(255,215,0,0.2)]' : 'border-white/10 bg-black/40 hover:bg-white/5' } `}>
-                                    {isSelected && <div className="absolute top-4 right-4 text-yellow-400 text-xs font-bold border border-yellow-400 px-2 py-1 rounded">EQUIPPED</div>}
-
-                                    <div className="text-3xl font-black italic font-orbitron text-center leading-tight">{car.name}</div>
-
-                                    <div className="w-full h-32 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800 to-black border border-white/10 shadow-inner">
-                                        <div className="w-16 h-16 rounded-full" style={{ backgroundColor: car.color, boxShadow: `0 0 20px ${ car.color } ` }}></div>
-                                    </div>
-
-                                    <div className="w-full space-y-2">
-                                        <div className="flex justify-between text-sm text-gray-400">
-                                            <span>SPEED</span>
-                                            <span className="text-white font-bold">{car.maxSpeed} km/h</span>
-                                        </div>
-                                        <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                                            <div className="h-full bg-blue-500" style={{ width: `${ (car.maxSpeed / 460) * 100 }% ` }}></div>
-                                        </div>
-
-                                        <div className="flex justify-between text-sm text-gray-400 mt-2">
-                                            <span>GEARS</span>
-                                            <span className="text-white font-bold">{car.gears}</span>
-                                        </div>
-                                    </div>
-
-                                    {isUnlocked ? (
-                                        <button
-                                            onClick={() => setSelectedCarId(car.id)}
-                                            className={`w - full py - 3 rounded - xl font - bold font - orbitron tracking - wider transition - all ${ isSelected ? 'bg-yellow-400 text-black shadow-lg' : 'bg-white/10 text-white hover:bg-white/20' } `}
-                                        >
-                                            {isSelected ? 'SELECTED' : 'SELECT'}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => buyCar(car.id)}
-                                            className="w-full py-3 rounded-xl font-bold font-orbitron tracking-wider bg-green-600 text-white hover:bg-green-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={coins < car.price}
-                                        >
-                                            BUY ({car.price})
-                                        </button>
-                                    )}
-                                </div>
-                            )
-                        })}
-                    </div>
-
-                    <button onClick={() => setGameState('menu')} className="mt-12 px-8 py-3 text-gray-400 hover:text-white font-bold font-orbitron tracking-widest hover:tracking-[0.2em] transition-all">
-                        ← BACK TO MENU
-                    </button>
+    {/* GARAGE */ }
+    {
+        gameState === 'garage' && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-zinc-900 text-white bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-900 to-black">
+                <h2 className="text-7xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-12 font-orbitron drop-shadow-lg">GARAGE</h2>
+                <div className="text-yellow-400 font-bold text-3xl mb-12 font-orbitron bg-black/50 px-8 py-4 rounded-full border border-yellow-500/30">
+                    YOUR COINS: <span className="text-white">{coins}</span>
                 </div>
-            )
-        }
 
-        {/* PLAYING UI */}
-        {
-            gameState === 'playing' && (
-                <>
-                    <canvas ref={canvasRef} className="block" />
+                <div className="flex gap-8 overflow-x-auto p-8 max-w-full">
+                    {Object.values(CARS).map(car => {
+                        const isUnlocked = unlockedCars.includes(car.id)
+                        const isSelected = selectedCarId === car.id
 
-                    {/* UI Overlay - Conditional Mobile/Desktop */}
-                    {isMobile ? (
-                        // MOBILE HUD - Simple single-line
-                        <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 flex items-center justify-between text-white text-sm font-orbitron pointer-events-none z-10">
-                            <div className="flex items-center gap-3">
-                                <span ref={scoreRef} className="text-cyan-400 font-bold">0m</span>
-                                <span ref={speedRef} className="text-purple-400 font-bold">0km/h</span>
-                                <span ref={gearRefDisplay} className="text-orange-400 text-xs">G:1</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span ref={coinRefHUD} className="text-yellow-400 font-bold">💰0</span>
-                                <div ref={fuelBarRef} className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500 w-full transition-all"></div>
+                        return (
+                            <div key={car.id} className={`relative p - 8 rounded - 3xl border - 2 flex flex - col items - center gap - 6 transition - all duration - 300 w - 80 ${isSelected ? 'border-yellow-400 bg-white/5 scale-105 shadow-[0_0_30px_rgba(255,215,0,0.2)]' : 'border-white/10 bg-black/40 hover:bg-white/5'} `}>
+                                {isSelected && <div className="absolute top-4 right-4 text-yellow-400 text-xs font-bold border border-yellow-400 px-2 py-1 rounded">EQUIPPED</div>}
+
+                                <div className="text-3xl font-black italic font-orbitron text-center leading-tight">{car.name}</div>
+
+                                <div className="w-full h-32 rounded-xl flex items-center justify-center bg-gradient-to-br from-gray-800 to-black border border-white/10 shadow-inner">
+                                    <div className="w-16 h-16 rounded-full" style={{ backgroundColor: car.color, boxShadow: `0 0 20px ${car.color} ` }}></div>
                                 </div>
-                                <button onClick={() => setGameState('menu')} className="px-2 py-1 bg-red-600 rounded text-xs pointer-events-auto">✕</button>
-                            </div>
-                        </div>
-                    ) : (
-                        // DESKTOP HUD - Full detailed version
-                        <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none">
-                            {/* Left: Stats */}
-                            <div className="flex flex-col gap-2">
-                                <h1 className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 font-orbitron drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" style={{ textShadow: '0 0 20px rgba(255,165,0,0.5)' }}>RALLY CLIMB</h1>
-                                <div className="bg-black/20 p-6 rounded-xl backdrop-blur-md border border-cyan-500/30 text-white font-orbitron shadow-[0_0_20px_rgba(0,255,255,0.1)]">
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">DIST</span>
-                                        <span ref={scoreRef} className="text-white text-2xl">0m</span>
+
+                                <div className="w-full space-y-2">
+                                    <div className="flex justify-between text-sm text-gray-400">
+                                        <span>SPEED</span>
+                                        <span className="text-white font-bold">{car.maxSpeed} km/h</span>
                                     </div>
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-purple-400 drop-shadow-[0_0_5px_rgba(192,38,211,0.8)]">SPD</span>
-                                        <span ref={speedRef} className="text-white text-2xl">0 km/h</span>
-                                    </div>
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span>
-                                        <span ref={gearRefDisplay} className="text-white text-2xl">1</span>
-                                        <span className="text-xs text-gray-400 tracking-widest">MANUAL</span>
-                                    </div>
-                                    <div className="text-xl font-bold mt-2 flex items-center gap-2">
-                                        <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span>
-                                        <span ref={coinRefHUD} className="text-white text-2xl">0</span>
+                                    <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-500" style={{ width: `${(car.maxSpeed / 460) * 100}% ` }}></div>
                                     </div>
 
-                                    <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
-
-                                    {/* Distance Bar */}
-                                    <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden">
-                                        <div id="dist-bar-fill" className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div>
-                                    </div>
-                                    <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
-                                </div>
-                            </div>
-
-                            {/* Right: Fuel & Menu */}
-                            <div className="flex flex-col gap-4 items-end pointer-events-auto">
-                                <button onClick={() => setGameState('menu')} className="px-8 py-2 bg-red-600/80 text-white font-bold font-orbitron rounded-lg border border-red-500/50 hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] backdrop-blur-sm">
-                                    ABORT RUN
-                                </button>
-
-                                <div className="w-72 bg-black/20 p-4 rounded-xl backdrop-blur-md border border-red-500/30 pointer-events-none shadow-[0_0_20px_rgba(220,38,38,0.1)]">
-                                    <div className="text-red-400 font-bold mb-2 font-orbitron tracking-widest drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]">FUEL LEVEL</div>
-                                    <div className="w-full h-4 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 relative">
-                                        {/* Grid pattern overlay for fuel bar */}
-                                        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '10px 100%' }}></div>
-                                        <div ref={fuelBarRef} className="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-full transition-all duration-200 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                                    <div className="flex justify-between text-sm text-gray-400 mt-2">
+                                        <span>GEARS</span>
+                                        <span className="text-white font-bold">{car.gears}</span>
                                     </div>
                                 </div>
+
+                                {isUnlocked ? (
+                                    <button
+                                        onClick={() => setSelectedCarId(car.id)}
+                                        className={`w - full py - 3 rounded - xl font - bold font - orbitron tracking - wider transition - all ${isSelected ? 'bg-yellow-400 text-black shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'} `}
+                                    >
+                                        {isSelected ? 'SELECTED' : 'SELECT'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => buyCar(car.id)}
+                                        className="w-full py-3 rounded-xl font-bold font-orbitron tracking-wider bg-green-600 text-white hover:bg-green-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={coins < car.price}
+                                    >
+                                        BUY ({car.price})
+                                    </button>
+                                )}
                             </div>
+                        )
+                    })}
+                </div>
+
+                <button onClick={() => setGameState('menu')} className="mt-12 px-8 py-3 text-gray-400 hover:text-white font-bold font-orbitron tracking-widest hover:tracking-[0.2em] transition-all">
+                    ← BACK TO MENU
+                </button>
+            </div>
+        )
+    }
+
+    {/* PLAYING UI */ }
+    {
+        gameState === 'playing' && (
+            <>
+                <canvas ref={canvasRef} className="block" />
+
+                {/* UI Overlay - Conditional Mobile/Desktop */}
+                {isMobile ? (
+                    // MOBILE HUD - Simple single-line
+                    <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 flex items-center justify-between text-white text-sm font-orbitron pointer-events-none z-10">
+                        <div className="flex items-center gap-3">
+                            <span ref={scoreRef} className="text-cyan-400 font-bold">0m</span>
+                            <span ref={speedRef} className="text-purple-400 font-bold">0km/h</span>
+                            <span ref={gearRefDisplay} className="text-orange-400 text-xs">G:1</span>
                         </div>
-                    )}
-
-                    {/* Game Over Screen */}
-                    <div ref={gameOverRef} className="absolute inset-0 bg-black/90 hidden flex-col items-center justify-center text-white z-50 backdrop-blur-lg">
-                        <h2 className="text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 mb-8 font-orbitron drop-shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-pulse">GAME OVER</h2>
-
-                        <div className="bg-black/40 p-12 rounded-3xl border-2 border-red-500/50 shadow-[0_0_50px_rgba(220,38,38,0.2)] flex flex-col items-center gap-6 backdrop-blur-md">
-                            <div className="text-3xl text-yellow-400 font-orbitron tracking-widest flex flex-col items-center">
-                                <span className="text-sm text-gray-400 mb-1">TOTAL EARNINGS</span>
-                                <span className="text-5xl drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
-                                    <span ref={coinRefGameOver}>0</span> <span className="text-2xl">$</span>
-                                </span>
+                        <div className="flex items-center gap-3">
+                            <span ref={coinRefHUD} className="text-yellow-400 font-bold">💰0</span>
+                            <div ref={fuelBarRef} className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-green-500 w-full transition-all"></div>
                             </div>
-
-                            <div className="w-full h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
-
-                            <div className="text-2xl text-cyan-400 font-orbitron tracking-widest flex flex-col items-center">
-                                <span className="text-sm text-gray-400 mb-1">DISTANCE TRAVELED</span>
-                                <span className="text-4xl drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
-                                    <span ref={scoreRefGameOver}>0</span>m
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-6 mt-12 pointer-events-auto">
-                            <button onClick={() => startGame(trackType)} className="group relative px-12 py-4 bg-yellow-500 text-black font-black text-2xl rounded-xl overflow-hidden shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105 transition-transform">
-                                <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                <span className="relative z-10 font-orbitron">RETRY RUN</span>
-                            </button>
-                            <button onClick={() => setGameState('menu')} className="group relative px-12 py-4 bg-transparent text-white border-2 border-white/20 font-black text-2xl rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/50 transition-all">
-                                <span className="relative z-10 font-orbitron">MAIN MENU</span>
-                            </button>
+                            <button onClick={() => setGameState('menu')} className="px-2 py-1 bg-red-600 rounded text-xs pointer-events-auto">✕</button>
                         </div>
                     </div>
-                </>
-            )
-        }
-        {/* Mobile Touch Controls - Optimized for new mobile UI */}
-        {isMobile && (
-            <div className={`absolute bottom - 0 left - 0 right - 0 pointer - events - none z - 40 px - 4 w - full ${ isLandscape ? 'pb-8' : 'pb-8' } `}>
+                ) : (
+                    // DESKTOP HUD - Full detailed version
+                    <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none">
+                        {/* Left: Stats */}
+                        <div className="flex flex-col gap-2">
+                            <h1 className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 font-orbitron drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" style={{ textShadow: '0 0 20px rgba(255,165,0,0.5)' }}>RALLY CLIMB</h1>
+                            <div className="bg-black/20 p-6 rounded-xl backdrop-blur-md border border-cyan-500/30 text-white font-orbitron shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                                <div className="text-xl font-bold flex items-center gap-2">
+                                    <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">DIST</span>
+                                    <span ref={scoreRef} className="text-white text-2xl">0m</span>
+                                </div>
+                                <div className="text-xl font-bold flex items-center gap-2">
+                                    <span className="text-purple-400 drop-shadow-[0_0_5px_rgba(192,38,211,0.8)]">SPD</span>
+                                    <span ref={speedRef} className="text-white text-2xl">0 km/h</span>
+                                </div>
+                                <div className="text-xl font-bold flex items-center gap-2">
+                                    <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span>
+                                    <span ref={gearRefDisplay} className="text-white text-2xl">1</span>
+                                    <span className="text-xs text-gray-400 tracking-widest">MANUAL</span>
+                                </div>
+                                <div className="text-xl font-bold mt-2 flex items-center gap-2">
+                                    <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span>
+                                    <span ref={coinRefHUD} className="text-white text-2xl">0</span>
+                                </div>
+
+                                <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
+
+                                {/* Distance Bar */}
+                                <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                                    <div id="dist-bar-fill" className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div>
+                                </div>
+                                <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
+                            </div>
+                        </div>
+
+                        {/* Right: Fuel & Menu */}
+                        <div className="flex flex-col gap-4 items-end pointer-events-auto">
+                            <button onClick={() => setGameState('menu')} className="px-8 py-2 bg-red-600/80 text-white font-bold font-orbitron rounded-lg border border-red-500/50 hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] backdrop-blur-sm">
+                                ABORT RUN
+                            </button>
+
+                            <div className="w-72 bg-black/20 p-4 rounded-xl backdrop-blur-md border border-red-500/30 pointer-events-none shadow-[0_0_20px_rgba(220,38,38,0.1)]">
+                                <div className="text-red-400 font-bold mb-2 font-orbitron tracking-widest drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]">FUEL LEVEL</div>
+                                <div className="w-full h-4 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 relative">
+                                    {/* Grid pattern overlay for fuel bar */}
+                                    <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '10px 100%' }}></div>
+                                    <div ref={fuelBarRef} className="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-full transition-all duration-200 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Game Over Screen */}
+                <div ref={gameOverRef} className="absolute inset-0 bg-black/90 hidden flex-col items-center justify-center text-white z-50 backdrop-blur-lg">
+                    <h2 className="text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 mb-8 font-orbitron drop-shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-pulse">GAME OVER</h2>
+
+                    <div className="bg-black/40 p-12 rounded-3xl border-2 border-red-500/50 shadow-[0_0_50px_rgba(220,38,38,0.2)] flex flex-col items-center gap-6 backdrop-blur-md">
+                        <div className="text-3xl text-yellow-400 font-orbitron tracking-widest flex flex-col items-center">
+                            <span className="text-sm text-gray-400 mb-1">TOTAL EARNINGS</span>
+                            <span className="text-5xl drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">
+                                <span ref={coinRefGameOver}>0</span> <span className="text-2xl">$</span>
+                            </span>
+                        </div>
+
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+
+                        <div className="text-2xl text-cyan-400 font-orbitron tracking-widest flex flex-col items-center">
+                            <span className="text-sm text-gray-400 mb-1">DISTANCE TRAVELED</span>
+                            <span className="text-4xl drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+                                <span ref={scoreRefGameOver}>0</span>m
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-6 mt-12 pointer-events-auto">
+                        <button onClick={() => startGame(trackType)} className="group relative px-12 py-4 bg-yellow-500 text-black font-black text-2xl rounded-xl overflow-hidden shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105 transition-transform">
+                            <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                            <span className="relative z-10 font-orbitron">RETRY RUN</span>
+                        </button>
+                        <button onClick={() => setGameState('menu')} className="group relative px-12 py-4 bg-transparent text-white border-2 border-white/20 font-black text-2xl rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/50 transition-all">
+                            <span className="relative z-10 font-orbitron">MAIN MENU</span>
+                        </button>
+                    </div>
+                </div>
+            </>
+        )
+    }
+    {/* Mobile Touch Controls - Optimized for new mobile UI */ }
+    {
+        isMobile && (
+            <div className={`absolute bottom - 0 left - 0 right - 0 pointer - events - none z - 40 px - 4 w - full ${isLandscape ? 'pb-8' : 'pb-8'} `}>
                 <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
                     {/* Left: Gear Shift */}
                     <div className="flex gap-2">
@@ -435,7 +418,8 @@ export default function Game2D() {
                     </button>
                 </div>
             </div>
-        )}
-    </div>
+        )
+    }
+    </div >
 )
 }
