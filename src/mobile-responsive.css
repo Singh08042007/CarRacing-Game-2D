@@ -72,4 +72,10 @@
     .md\:hidden button {
         transform: none !important;
     }
+
+    /* Allow text selection - don't block user interaction */
+    * {
+        -webkit-user-select: text !important;
+        user-select: text !important;
+    }
 }
