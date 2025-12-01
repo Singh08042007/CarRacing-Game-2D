@@ -28,18 +28,6 @@ export default function Game2D() {
 
     const [gameState, setGameState] = useState('menu')
     const [trackType, setTrackType] = useState('hilly')
-    const [coins, setCoins] = useState(0)
-    const [unlockedCars, setUnlockedCars] = useState(['rally'])
-    const [selectedCarId, setSelectedCarId] = useState('rally')
-    const [restartKey, setRestartKey] = useState(0)
-    const [highScore, setHighScore] = useState(0)
-    const [session, setSession] = useState(null)
-    const [loadingData, setLoadingData] = useState(false)
-    const [isMobile, setIsMobile] = useState(false)
-    const [isLandscape, setIsLandscape] = useState(false)
-
-    const lastShiftTime = useRef(0)
-    const currentCarConfig = useRef(CARS.RALLY)
     const collectedCoinsSession = useRef(0)
     const lastRewardDist = useRef(0)
     const keys = useRef({})
@@ -135,13 +123,12 @@ export default function Game2D() {
     const handleTouchEnd = (key) => { keys.current[key] = false }
     const handleGameOver = (reason, dist) => {
         isGameOver.current = true
+        setGameOverStats({ distance: dist, coins: collectedCoinsSession.current })
         setGameState('gameover')
         if (dist > highScore) {
             setHighScore(dist)
             updateProfile()
         }
-        if (scoreRefGameOver.current) scoreRefGameOver.current.innerText = dist
-        if (coinRefGameOver.current) coinRefGameOver.current.innerText = collectedCoinsSession.current
     }
 
     useEffect(() => {
@@ -201,11 +188,9 @@ export default function Game2D() {
     }, [])
 
     useEffect(() => {
-        if (engineSound.current && engineGain.current) {
-            const speed = Math.abs(currentCarConfig.current.speedRanges[gearRef.current - 1] || 0)
-            const pitch = 0.5 + (speed / 200)
-            if (engineSound.current.playbackRate) engineSound.current.playbackRate.value = Math.min(Math.max(pitch, 0.5), 2.0)
-            engineGain.current.gain.value = gameState === 'playing' ? 0.3 : 0
+        if (engineGain.current && audioContext.current) {
+            const target = gameState === 'playing' ? 0.1 : 0
+            engineGain.current.gain.setTargetAtTime(target, audioContext.current.currentTime, 0.1)
         }
     }, [gameState])
 
@@ -319,6 +304,20 @@ export default function Game2D() {
                 }
             }
 
+            if (engineSound.current && engineGain.current) {
+                const currentSpeed = carBody.speed
+                const isGasPressed = keys.current['KeyD'] || keys.current['ArrowRight']
+                const targetPitch = 0.5 + (currentSpeed / 15)
+                const pitch = Math.min(Math.max(targetPitch, 0.5), 3.0)
+                if (engineSound.current.playbackRate) {
+                    const currentPitch = engineSound.current.playbackRate.value
+                    engineSound.current.playbackRate.value = currentPitch + (pitch - currentPitch) * 0.1
+                }
+                const targetVolume = isGasPressed ? 0.4 : 0.1
+                const currentVol = engineGain.current.gain.value
+                engineGain.current.gain.value = currentVol + (targetVolume - currentVol) * 0.1
+            }
+
             if (scoreRef.current) scoreRef.current.innerText = `${dist}m`
             if (speedRef.current) speedRef.current.innerText = `${speed} km/h`
             if (gearRefDisplay.current) gearRefDisplay.current.innerText = `${gearRef.current}/${currentCarConfig.current.gears}`
@@ -334,16 +333,65 @@ export default function Game2D() {
             const width = canvas.width = window.innerWidth, height = canvas.height = window.innerHeight
             const targetCamX = -carBody.position.x + width * 0.3, targetCamY = -carBody.position.y + height * 0.6
             cameraPos.current.x += (targetCamX - cameraPos.current.x) * 0.1; cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
-            ctx.save(); const gradient = ctx.createLinearGradient(0, 0, 0, height)
-            if (trackType === 'highway') { gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(1, '#24243e') } else { gradient.addColorStop(0, '#4facfe'); gradient.addColorStop(1, '#00f2fe') }
+
+            ctx.save()
+
+            // Sky & Background (Parallax)
+            const gradient = ctx.createLinearGradient(0, 0, 0, height)
+            if (trackType === 'highway') { gradient.addColorStop(0, '#0f0c29'); gradient.addColorStop(1, '#24243e') }
+            else if (trackType === 'racing') { gradient.addColorStop(0, '#1a2a6c'); gradient.addColorStop(1, '#b21f1f'); gradient.addColorStop(1, '#fdbb2d') }
+            else { gradient.addColorStop(0, '#4facfe'); gradient.addColorStop(1, '#00f2fe') }
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, width, height)
-            ctx.beginPath(); ctx.arc(width - 100, 100, 60, 0, Math.PI * 2); ctx.fillStyle = trackType === 'highway' ? '#eee' : '#ffd700'; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 40; ctx.fill(); ctx.shadowBlur = 0
-            ctx.save(); const bgOffset = cameraPos.current.x * 0.05
-            if (trackType === 'hilly') { ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.moveTo(0, height); for (let i = 0; i < width * 2; i += 100) ctx.lineTo((i - bgOffset) % (width * 2) - 100, height - 200 - Math.sin(i) * 50); ctx.lineTo(width, height); ctx.fill() }
-            ctx.restore(); ctx.translate(cameraPos.current.x, cameraPos.current.y)
+
+            // Sun/Moon
+            ctx.beginPath();
+            ctx.arc(width - 100, 100, 60, 0, Math.PI * 2);
+            ctx.fillStyle = trackType === 'highway' ? '#eee' : '#ffd700';
+            ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 40; ctx.fill(); ctx.shadowBlur = 0
+
+            // Parallax Layers
+            const bgOffset = cameraPos.current.x * 0.05
+            ctx.save()
+            if (trackType === 'hilly') {
+                ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.moveTo(0, height);
+                for (let i = 0; i < width * 2; i += 150) ctx.lineTo((i - bgOffset) % (width * 2) - 100, height - 300 - Math.abs(Math.sin(i)) * 150);
+                ctx.lineTo(width, height); ctx.fill()
+            } else if (trackType === 'highway') {
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                for (let i = 0; i < width * 2; i += 100) {
+                    const h = 100 + Math.abs(Math.sin(i * 1321)) * 150
+                    ctx.fillRect((i - bgOffset) % (width * 2) - 50, height - h, 40, h)
+                }
+            }
+            ctx.restore()
+
+            // Terrain
+            ctx.translate(cameraPos.current.x, cameraPos.current.y)
             const startRenderX = -cameraPos.current.x - 100, endRenderX = -cameraPos.current.x + width + 100
-            ctx.beginPath(); ctx.moveTo(startRenderX, getTerrainHeight(startRenderX)); for (let x = startRenderX; x <= endRenderX; x += 40) ctx.lineTo(x, getTerrainHeight(x)); ctx.lineTo(endRenderX, getTerrainHeight(endRenderX) + 1000); ctx.lineTo(startRenderX, getTerrainHeight(startRenderX) + 1000); ctx.closePath()
-            if (trackType === 'highway') { ctx.fillStyle = asphaltPattern; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke() } else { ctx.fillStyle = grassPattern; ctx.fill(); ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 5; ctx.stroke() }
+
+            ctx.beginPath();
+            ctx.moveTo(startRenderX, getTerrainHeight(startRenderX));
+            for (let x = startRenderX; x <= endRenderX; x += 40) ctx.lineTo(x, getTerrainHeight(x));
+            ctx.lineTo(endRenderX, getTerrainHeight(endRenderX) + 1000);
+            ctx.lineTo(startRenderX, getTerrainHeight(startRenderX) + 1000);
+            ctx.closePath()
+
+            if (trackType === 'highway') { ctx.fillStyle = asphaltPattern; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke() }
+            else { ctx.fillStyle = grassPattern; ctx.fill(); ctx.strokeStyle = '#5d4037'; ctx.lineWidth = 5; ctx.stroke() }
+
+            // Decorations
+            for (let x = Math.floor(startRenderX / 500) * 500; x <= endRenderX; x += 500) {
+                const y = getTerrainHeight(x)
+                if (trackType === 'hilly') {
+                    ctx.fillStyle = '#1b5e20'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 20, y - 60); ctx.lineTo(x + 40, y); ctx.fill()
+                    ctx.fillStyle = '#2e7d32'; ctx.beginPath(); ctx.moveTo(x + 10, y - 40); ctx.lineTo(x + 20, y - 80); ctx.lineTo(x + 30, y - 40); ctx.fill()
+                    ctx.fillStyle = '#3e2723'; ctx.fillRect(x + 15, y, 10, 10)
+                } else if (trackType === 'highway') {
+                    ctx.fillStyle = '#555'; ctx.fillRect(x, y - 150, 5, 150); ctx.beginPath(); ctx.arc(x + 20, y - 150, 10, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fill(); ctx.shadowBlur = 0
+                }
+            }
+
+            // Bodies
             Composite.allBodies(world).forEach(body => {
                 if (body.label === 'ground') return
                 ctx.save(); ctx.translate(body.position.x, body.position.y); ctx.rotate(body.angle)
@@ -489,21 +537,23 @@ export default function Game2D() {
                             </div>
                         </div>
                     )}
-                    <div ref={gameOverRef} className="absolute inset-0 bg-black/90 hidden flex-col items-center justify-center text-white z-50 backdrop-blur-lg">
-                        <h2 className="text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 mb-8 font-orbitron drop-shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-pulse">GAME OVER</h2>
-                        <div className="bg-black/40 p-12 rounded-3xl border-2 border-red-500/50 shadow-[0_0_50px_rgba(220,38,38,0.2)] flex flex-col items-center gap-6 backdrop-blur-md">
-                            <div className="text-3xl text-yellow-400 font-orbitron tracking-widest flex flex-col items-center"><span className="text-sm text-gray-400 mb-1">TOTAL EARNINGS</span><span className="text-5xl drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]"><span ref={coinRefGameOver}>0</span> <span className="text-2xl">$</span></span></div>
-                            <div className="w-full h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
-                            <div className="text-2xl text-cyan-400 font-orbitron tracking-widest flex flex-col items-center"><span className="text-sm text-gray-400 mb-1">DISTANCE TRAVELED</span><span className="text-4xl drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]"><span ref={scoreRefGameOver}>0</span>m</span></div>
-                        </div>
-                        <div className="flex gap-6 mt-12 pointer-events-auto">
-                            <button onClick={() => startGame(trackType)} className="group relative px-12 py-4 bg-yellow-500 text-black font-black text-2xl rounded-xl overflow-hidden shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105 transition-transform"><div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div><span className="relative z-10 font-orbitron">RETRY RUN</span></button>
-                            <button onClick={() => setGameState('menu')} className="group relative px-12 py-4 bg-transparent text-white border-2 border-white/20 font-black text-2xl rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/50 transition-all"><span className="relative z-10 font-orbitron">MAIN MENU</span></button>
-                        </div>
-                    </div>
                 </>
             )}
 
+            {gameState === 'gameover' && (
+                <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-white z-50 backdrop-blur-lg">
+                    <h2 className="text-8xl font-black italic text-transparent bg-clip-text bg-gradient-to-b from-red-500 to-red-900 mb-8 font-orbitron drop-shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-pulse">GAME OVER</h2>
+                    <div className="bg-black/40 p-12 rounded-3xl border-2 border-red-500/50 shadow-[0_0_50px_rgba(220,38,38,0.2)] flex flex-col items-center gap-6 backdrop-blur-md">
+                        <div className="text-3xl text-yellow-400 font-orbitron tracking-widest flex flex-col items-center"><span className="text-sm text-gray-400 mb-1">TOTAL EARNINGS</span><span className="text-5xl drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]">{gameOverStats.coins} <span className="text-2xl">$</span></span></div>
+                        <div className="w-full h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent"></div>
+                        <div className="text-2xl text-cyan-400 font-orbitron tracking-widest flex flex-col items-center"><span className="text-sm text-gray-400 mb-1">DISTANCE TRAVELED</span><span className="text-4xl drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">{gameOverStats.distance}m</span></div>
+                    </div>
+                    <div className="flex gap-6 mt-12 pointer-events-auto">
+                        <button onClick={() => startGame(trackType)} className="group relative px-12 py-4 bg-yellow-500 text-black font-black text-2xl rounded-xl overflow-hidden shadow-[0_0_20px_rgba(234,179,8,0.5)] hover:scale-105 transition-transform"><div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div><span className="relative z-10 font-orbitron">RETRY RUN</span></button>
+                        <button onClick={() => setGameState('menu')} className="group relative px-12 py-4 bg-transparent text-white border-2 border-white/20 font-black text-2xl rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/50 transition-all"><span className="relative z-10 font-orbitron">MAIN MENU</span></button>
+                    </div>
+                </div>
+            )}
             {isMobile && (
                 <div className={`absolute bottom-0 left-0 right-0 pointer-events-none z-40 px-4 w-full ${isLandscape ? 'pb-8' : 'pb-8'}`}>
                     <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
