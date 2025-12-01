@@ -213,6 +213,30 @@ export default function Game2D() {
         }
     }
 
+    // Touch handlers for mobile controls (defined at component level)
+    const handleTouchStart = (code) => {
+        keys.current[code] = true
+        // Handle gear shifts immediately
+        if (code === 'KeyW' && gearRef.current < currentCarConfig.current.gears) {
+            const now = Date.now()
+            if (now - lastShiftTime.current > 250) {
+                gearRef.current++
+                lastShiftTime.current = now
+            }
+        }
+        if (code === 'KeyS' && gearRef.current > 1) {
+            const now = Date.now()
+            if (now - lastShiftTime.current > 250) {
+                gearRef.current--
+                lastShiftTime.current = now
+            }
+        }
+    }
+
+    const handleTouchEnd = (code) => {
+        keys.current[code] = false
+    }
+
     useEffect(() => {
         if (gameState !== 'playing') return
 
@@ -388,13 +412,6 @@ export default function Game2D() {
 
         window.addEventListener('keydown', handleKeyDown)
         window.addEventListener('keyup', handleKeyUp)
-
-        // Touch Handlers
-        const handleTouchStart = (code) => {
-            keys.current[code] = true
-            if (code === 'KeyW' || code === 'KeyS') handleShift(code)
-        }
-        const handleTouchEnd = (code) => keys.current[code] = false
 
         // 7. Physics Loop
         Events.on(engine, 'beforeUpdate', () => {
