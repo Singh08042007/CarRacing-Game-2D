@@ -92,8 +92,13 @@ export default function Game2D() {
 
     const fetchProfile = async (userId) => {
         setLoadingData(true)
-        const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+        console.log('Fetching profile for:', userId)
+        const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
+        if (error) {
+            console.error('Error fetching profile:', error)
+        }
         if (data) {
+            console.log('Profile loaded:', data)
             setCoins(data.coins || 0)
             setHighScore(data.high_score || 0)
             setUnlockedCars(data.unlocked_cars || ['rally'])
@@ -103,8 +108,12 @@ export default function Game2D() {
     }
 
     const updateProfile = async () => {
-        if (!session) return
-        await supabase.from('profiles').upsert({
+        if (!session) {
+            console.warn('No session, cannot save profile')
+            return
+        }
+        console.log('Saving profile...', { coins: coinsRef.current, highScore })
+        const { error } = await supabase.from('profiles').upsert({
             id: session.user.id,
             coins: coinsRef.current,
             high_score: highScore,
@@ -112,6 +121,8 @@ export default function Game2D() {
             selected_car: selectedCarId,
             updated_at: new Date()
         })
+        if (error) console.error('Error saving profile:', error)
+        else console.log('Profile saved successfully')
     }
 
     const startGame = (type) => {
