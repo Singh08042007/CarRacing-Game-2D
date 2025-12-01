@@ -10,6 +10,7 @@ alter table profiles add column if not exists high_score integer default 0;
 alter table profiles add column if not exists unlocked_cars text[] default ARRAY['rally'];
 alter table profiles add column if not exists selected_car text default 'rally';
 alter table profiles add column if not exists updated_at timestamp with time zone;
+alter table profiles add column if not exists boosters integer default 0;
 
 -- Enable RLS
 alter table profiles enable row level security;

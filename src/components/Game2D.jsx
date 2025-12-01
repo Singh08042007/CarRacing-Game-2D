@@ -39,7 +39,11 @@ export default function Game2D() {
     const [isMobile, setIsMobile] = useState(false)
     const [isLandscape, setIsLandscape] = useState(false)
     const [gameOverStats, setGameOverStats] = useState({ distance: 0, coins: 0 })
+    const [boosters, setBoosters] = useState(0)
     const coinsRef = useRef(0)
+    const boostersRef = useRef(0)
+    const isBoosting = useRef(false)
+    const boostEndTime = useRef(0)
     const collectedCoinsSession = useRef(0)
     const lastRewardDist = useRef(0)
     const keys = useRef({})
@@ -76,7 +80,8 @@ export default function Game2D() {
 
     useEffect(() => {
         coinsRef.current = coins
-    }, [coins])
+        boostersRef.current = boosters
+    }, [coins, boosters])
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -101,6 +106,7 @@ export default function Game2D() {
             console.log('Profile loaded:', data)
             setCoins(data.coins || 0)
             setHighScore(data.high_score || 0)
+            setBoosters(data.boosters || 0)
             setUnlockedCars(data.unlocked_cars || ['rally'])
             if (data.selected_car) setSelectedCarId(data.selected_car)
         }
@@ -118,6 +124,7 @@ export default function Game2D() {
             id: session.user.id,
             coins: coinsRef.current,
             high_score: scoreToSave,
+            boosters: boostersRef.current,
             unlocked_cars: unlockedCars,
             selected_car: selectedCarId,
             updated_at: new Date()
@@ -145,6 +152,14 @@ export default function Game2D() {
             setCoins(prev => prev - car.price)
             setUnlockedCars(prev => [...prev, carId])
             setSelectedCarId(carId)
+            updateProfile()
+        }
+    }
+
+    const buyBooster = () => {
+        if (coins >= 10 && boosters < 10) {
+            setCoins(prev => prev - 10)
+            setBoosters(prev => prev + 1)
             updateProfile()
         }
     }
@@ -335,10 +350,29 @@ export default function Game2D() {
                 Body.applyForce(carBody, carBody.position, { x: 0, y: downforce })
             }
 
+            // Booster Logic
+            if ((keys.current['ShiftLeft'] || keys.current['ShiftRight']) && boostersRef.current > 0 && !isBoosting.current) {
+                isBoosting.current = true
+                boostEndTime.current = Date.now() + 5000
+                setBoosters(prev => prev - 1)
+            }
+
+            if (isBoosting.current) {
+                if (Date.now() > boostEndTime.current) {
+                    isBoosting.current = false
+                } else {
+                    // Apply Boost
+                    const boostForce = { x: Math.cos(carBody.angle) * 0.05, y: Math.sin(carBody.angle) * 0.05 }
+                    Body.applyForce(carBody, carBody.position, boostForce)
+                    fuel.current = Math.max(fuel.current, 1) // Don't run out of fuel while boosting
+                }
+            }
+
             if (fuel.current > 0) {
                 const gearIndex = gearRef.current - 1
-                const wheelSpeed = currentCarConfig.current.wheelSpeedMultipliers[gearIndex] || 0.3
-                const maxSpeed = currentCarConfig.current.speedRanges[gearIndex] || 30
+                const boostMultiplier = isBoosting.current ? 1.5 : 1.0
+                const wheelSpeed = (currentCarConfig.current.wheelSpeedMultipliers[gearIndex] || 0.3) * boostMultiplier
+                const maxSpeed = (currentCarConfig.current.speedRanges[gearIndex] || 30) + (isBoosting.current ? 50 : 0)
 
                 if ((keys.current['KeyD'] || keys.current['ArrowRight']) && speed < maxSpeed) {
                     Body.setAngularVelocity(wheelA, wheelSpeed); Body.setAngularVelocity(wheelB, wheelSpeed); fuel.current -= 0.05
@@ -354,7 +388,7 @@ export default function Game2D() {
             if (engineSound.current && engineGain.current) {
                 const currentSpeed = carBody.speed
                 const isGasPressed = keys.current['KeyD'] || keys.current['ArrowRight']
-                const targetPitch = 0.5 + (currentSpeed / 15)
+                const targetPitch = 0.5 + (currentSpeed / 15) + (isBoosting.current ? 0.5 : 0) // Higher pitch when boosting
                 const pitch = Math.min(Math.max(targetPitch, 0.5), 3.0)
                 if (engineSound.current.playbackRate) {
                     const currentPitch = engineSound.current.playbackRate.value
@@ -630,6 +664,22 @@ export default function Game2D() {
                 }
             }
 
+            // Boost Flames
+            if (isBoosting.current) {
+                for (let i = 0; i < 5; i++) {
+                    particles.push({
+                        x: carBody.position.x - Math.cos(carBody.angle) * 60,
+                        y: carBody.position.y,
+                        vx: -Math.cos(carBody.angle) * 10 + (Math.random() - 0.5) * 5,
+                        vy: -Math.sin(carBody.angle) * 10 + (Math.random() - 0.5) * 5,
+                        life: 0.5,
+                        type: 'fire',
+                        size: Math.random() * 10 + 5,
+                        color: `hsl(${Math.random() * 60 + 10}, 100%, 50%)`
+                    })
+                }
+            }
+
             // Render Particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -737,6 +787,22 @@ export default function Game2D() {
                                 </div>
                             )
                         })}
+
+                        {/* Booster Shop Item */}
+                        <div className="relative p-8 rounded-3xl border-2 border-red-500/30 bg-black/40 hover:bg-white/5 flex flex-col items-center gap-6 transition-all duration-300 w-80">
+                            <div className="text-3xl font-black italic font-orbitron text-center leading-tight text-red-500">NITRO BOOST</div>
+                            <div className="w-full h-32 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-900 to-black border border-white/10 shadow-inner">
+                                <span className="text-5xl">🚀</span>
+                            </div>
+                            <div className="w-full space-y-2">
+                                <div className="flex justify-between text-sm text-gray-400"><span>EFFECT</span><span className="text-white font-bold">+50 km/h</span></div>
+                                <div className="flex justify-between text-sm text-gray-400"><span>DURATION</span><span className="text-white font-bold">5s</span></div>
+                                <div className="flex justify-between text-sm text-gray-400 mt-2"><span>OWNED</span><span className="text-yellow-400 font-bold">{boosters}/10</span></div>
+                            </div>
+                            <button onClick={buyBooster} className="w-full py-3 rounded-xl font-bold font-orbitron tracking-wider bg-red-600 text-white hover:bg-red-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled={coins < 10 || boosters >= 10}>
+                                {boosters >= 10 ? 'MAXED OUT' : 'BUY (10)'}
+                            </button>
+                        </div>
                     </div>
                     <button onClick={() => setGameState('menu')} className="mt-12 px-8 py-3 text-gray-400 hover:text-white font-bold font-orbitron tracking-widest hover:tracking-[0.2em] transition-all">← BACK TO MENU</button>
                 </div>
@@ -748,7 +814,12 @@ export default function Game2D() {
                     {isMobile ? (
                         <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 flex items-center justify-between text-white text-sm font-orbitron pointer-events-none z-10">
                             <div className="flex items-center gap-3"><span ref={scoreRef} className="text-cyan-400 font-bold">0m</span><span ref={speedRef} className="text-purple-400 font-bold">0km/h</span><span ref={gearRefDisplay} className="text-orange-400 text-xs">G:1</span></div>
-                            <div className="flex items-center gap-3"><span ref={coinRefHUD} className="text-yellow-400 font-bold">💰0</span><div ref={fuelBarRef} className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden"><div className="h-full bg-green-500 w-full transition-all"></div></div><button onClick={() => setGameState('menu')} className="px-2 py-1 bg-red-600 rounded text-xs pointer-events-auto">✕</button></div>
+                            <div className="flex items-center gap-3">
+                                <button onTouchStart={() => { keys.current['ShiftLeft'] = true }} onTouchEnd={() => { keys.current['ShiftLeft'] = false }} className="px-3 py-1 bg-red-600 rounded text-xs font-bold pointer-events-auto active:scale-95">🚀 {boosters}</button>
+                                <span ref={coinRefHUD} className="text-yellow-400 font-bold">💰0</span>
+                                <div ref={fuelBarRef} className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden"><div className="h-full bg-green-500 w-full transition-all"></div></div>
+                                <button onClick={() => setGameState('menu')} className="px-2 py-1 bg-red-600 rounded text-xs pointer-events-auto">✕</button>
+                            </div>
                         </div>
                     ) : (
                         <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none">
@@ -759,6 +830,7 @@ export default function Game2D() {
                                     <div className="text-xl font-bold flex items-center gap-2"><span className="text-purple-400 drop-shadow-[0_0_5px_rgba(192,38,211,0.8)]">SPD</span><span ref={speedRef} className="text-white text-2xl">0 km/h</span></div>
                                     <div className="text-xl font-bold flex items-center gap-2"><span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span><span ref={gearRefDisplay} className="text-white text-2xl">1</span><span className="text-xs text-gray-400 tracking-widest">MANUAL</span></div>
                                     <div className="text-xl font-bold mt-2 flex items-center gap-2"><span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span><span ref={coinRefHUD} className="text-white text-2xl">0</span></div>
+                                    <div className="text-xl font-bold mt-2 flex items-center gap-2"><span className="text-red-500 drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]">NITRO</span><span className="text-white text-2xl">{boosters}</span><span className="text-xs text-gray-400 tracking-widest">SHIFT</span></div>
                                     <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
                                     <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden"><div ref={distBarRef} className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div></div>
                                     <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
