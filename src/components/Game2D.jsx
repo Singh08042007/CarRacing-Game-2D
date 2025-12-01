@@ -76,6 +76,21 @@ export default function Game2D() {
     const [session, setSession] = useState(null)
     const [loadingData, setLoadingData] = useState(false)
 
+    // Mobile Detection
+    const [isMobile, setIsMobile] = useState(false)
+    const [isLandscape, setIsLandscape] = useState(false)
+
+    useEffect(() => {
+        const checkMobile = () => {
+            const mobile = window.innerWidth < 768
+            setIsMobile(mobile)
+            setIsLandscape(window.innerWidth > window.innerHeight)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
 
     // Physics State Refs (for loop access)
     const fuel = useRef(100)
@@ -923,56 +938,75 @@ export default function Game2D() {
                     <>
                         <canvas ref={canvasRef} className="block" />
 
-                        {/* UI Overlay */}
-                        <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none">
-                            {/* Left: Stats */}
-                            <div className="flex flex-col gap-2">
-                                <h1 className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 font-orbitron drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" style={{ textShadow: '0 0 20px rgba(255,165,0,0.5)' }}>RALLY CLIMB</h1>
-                                <div className="bg-black/20 p-6 rounded-xl backdrop-blur-md border border-cyan-500/30 text-white font-orbitron shadow-[0_0_20px_rgba(0,255,255,0.1)]">
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">DIST</span>
-                                        <span ref={scoreRef} className="text-white text-2xl">0m</span>
+                        {/* UI Overlay - Conditional Mobile/Desktop */}
+                        {isMobile ? (
+                            // MOBILE HUD - Simple single-line
+                            <div className="absolute top-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2 flex items-center justify-between text-white text-sm font-orbitron pointer-events-none z-10">
+                                <div className="flex items-center gap-3">
+                                    <span ref={scoreRef} className="text-cyan-400 font-bold">0m</span>
+                                    <span ref={speedRef} className="text-purple-400 font-bold">0km/h</span>
+                                    <span ref={gearRefDisplay} className="text-orange-400 text-xs">G:1</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span ref={coinRefHUD} className="text-yellow-400 font-bold">💰0</span>
+                                    <div ref={fuelBarRef} className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                        <div className="h-full bg-green-500 w-full transition-all"></div>
                                     </div>
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-purple-400 drop-shadow-[0_0_5px_rgba(192,38,211,0.8)]">SPD</span>
-                                        <span ref={speedRef} className="text-white text-2xl">0 km/h</span>
-                                    </div>
-                                    <div className="text-xl font-bold flex items-center gap-2">
-                                        <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span>
-                                        <span ref={gearRefDisplay} className="text-white text-2xl">1</span>
-                                        <span className="text-xs text-gray-400 tracking-widest">MANUAL</span>
-                                    </div>
-                                    <div className="text-xl font-bold mt-2 flex items-center gap-2">
-                                        <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span>
-                                        <span ref={coinRefHUD} className="text-white text-2xl">0</span>
-                                    </div>
-
-                                    <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
-
-                                    {/* Distance Bar */}
-                                    <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden">
-                                        <div id="dist-bar-fill" className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div>
-                                    </div>
-                                    <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
+                                    <button onClick={() => setGameState('menu')} className="px-2 py-1 bg-red-600 rounded text-xs pointer-events-auto">✕</button>
                                 </div>
                             </div>
+                        ) : (
+                            // DESKTOP HUD - Full detailed version
+                            <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-start pointer-events-none">
+                                {/* Left: Stats */}
+                                <div className="flex flex-col gap-2">
+                                    <h1 className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-600 font-orbitron drop-shadow-[0_0_10px_rgba(255,165,0,0.5)]" style={{ textShadow: '0 0 20px rgba(255,165,0,0.5)' }}>RALLY CLIMB</h1>
+                                    <div className="bg-black/20 p-6 rounded-xl backdrop-blur-md border border-cyan-500/30 text-white font-orbitron shadow-[0_0_20px_rgba(0,255,255,0.1)]">
+                                        <div className="text-xl font-bold flex items-center gap-2">
+                                            <span className="text-cyan-400 drop-shadow-[0_0_5px_rgba(0,255,255,0.8)]">DIST</span>
+                                            <span ref={scoreRef} className="text-white text-2xl">0m</span>
+                                        </div>
+                                        <div className="text-xl font-bold flex items-center gap-2">
+                                            <span className="text-purple-400 drop-shadow-[0_0_5px_rgba(192,38,211,0.8)]">SPD</span>
+                                            <span ref={speedRef} className="text-white text-2xl">0 km/h</span>
+                                        </div>
+                                        <div className="text-xl font-bold flex items-center gap-2">
+                                            <span className="text-orange-400 drop-shadow-[0_0_5px_rgba(251,146,60,0.8)]">GEAR</span>
+                                            <span ref={gearRefDisplay} className="text-white text-2xl">1</span>
+                                            <span className="text-xs text-gray-400 tracking-widest">MANUAL</span>
+                                        </div>
+                                        <div className="text-xl font-bold mt-2 flex items-center gap-2">
+                                            <span className="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">COINS</span>
+                                            <span ref={coinRefHUD} className="text-white text-2xl">0</span>
+                                        </div>
 
-                            {/* Right: Fuel & Menu */}
-                            <div className="flex flex-col gap-4 items-end pointer-events-auto">
-                                <button onClick={() => setGameState('menu')} className="px-8 py-2 bg-red-600/80 text-white font-bold font-orbitron rounded-lg border border-red-500/50 hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] backdrop-blur-sm">
-                                    ABORT RUN
-                                </button>
+                                        <div className="text-xs text-gray-500 mt-2 tracking-widest border-t border-white/10 pt-2">CONTROLS: W / S</div>
 
-                                <div className="w-72 bg-black/20 p-4 rounded-xl backdrop-blur-md border border-red-500/30 pointer-events-none shadow-[0_0_20px_rgba(220,38,38,0.1)]">
-                                    <div className="text-red-400 font-bold mb-2 font-orbitron tracking-widest drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]">FUEL LEVEL</div>
-                                    <div className="w-full h-4 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 relative">
-                                        {/* Grid pattern overlay for fuel bar */}
-                                        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '10px 100%' }}></div>
-                                        <div ref={fuelBarRef} className="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-full transition-all duration-200 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                                        {/* Distance Bar */}
+                                        <div className="mt-3 w-full h-1 bg-gray-800 rounded-full overflow-hidden">
+                                            <div id="dist-bar-fill" className="h-full bg-gradient-to-r from-cyan-400 to-blue-600 w-0 transition-all duration-200 shadow-[0_0_10px_rgba(0,255,255,0.5)]"></div>
+                                        </div>
+                                        <div className="text-[10px] text-cyan-500/70 text-center mt-1 tracking-widest">NEXT CHECKPOINT</div>
+                                    </div>
+                                </div>
+
+                                {/* Right: Fuel & Menu */}
+                                <div className="flex flex-col gap-4 items-end pointer-events-auto">
+                                    <button onClick={() => setGameState('menu')} className="px-8 py-2 bg-red-600/80 text-white font-bold font-orbitron rounded-lg border border-red-500/50 hover:bg-red-500 transition-all shadow-[0_0_15px_rgba(220,38,38,0.4)] backdrop-blur-sm">
+                                        ABORT RUN
+                                    </button>
+
+                                    <div className="w-72 bg-black/20 p-4 rounded-xl backdrop-blur-md border border-red-500/30 pointer-events-none shadow-[0_0_20px_rgba(220,38,38,0.1)]">
+                                        <div className="text-red-400 font-bold mb-2 font-orbitron tracking-widest drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]">FUEL LEVEL</div>
+                                        <div className="w-full h-4 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 relative">
+                                            {/* Grid pattern overlay for fuel bar */}
+                                            <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'linear-gradient(90deg, transparent 50%, rgba(0,0,0,0.5) 50%)', backgroundSize: '10px 100%' }}></div>
+                                            <div ref={fuelBarRef} className="h-full bg-gradient-to-r from-red-600 via-yellow-500 to-green-500 w-full transition-all duration-200 shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Game Over Screen */}
                         <div ref={gameOverRef} className="absolute inset-0 bg-black/90 hidden flex-col items-center justify-center text-white z-50 backdrop-blur-lg">
@@ -1009,48 +1043,44 @@ export default function Game2D() {
                     </>
                 )
             }
-            {/* Mobile Controls Overlay */}
-            <div className="absolute inset-0 pointer-events-none md:hidden z-40 flex flex-col justify-end pb-8 px-4">
-                <div className="flex justify-center items-end w-full pointer-events-auto gap-4">
-                    {/* Left: Gears */}
-                    <div className="flex flex-col gap-4">
+            {/* Mobile Touch Controls - Optimized for new mobile UI */}
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-none md:hidden z-40 pb-4 px-4">
+                <div className="flex justify-between items-end w-full pointer-events-auto gap-3">
+                    {/* Left: Gear Shift */}
+                    <div className="flex gap-2">
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyW') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyW') }}
-                            className="w-20 h-20 rounded-full bg-cyan-500/20 border-2 border-cyan-400/50 backdrop-blur-md flex items-center justify-center active:bg-cyan-500/50 transition-all shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+                            className="w-16 h-16 rounded-lg bg-cyan-500/30 border border-cyan-400 backdrop-blur-sm flex items-center justify-center active:bg-cyan-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-3xl text-cyan-400 font-black">▲</span>
+                            <span className="text-2xl text-white font-black">▲</span>
                         </button>
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyS') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyS') }}
-                            className="w-20 h-20 rounded-full bg-purple-500/20 border-2 border-purple-400/50 backdrop-blur-md flex items-center justify-center active:bg-purple-500/50 transition-all shadow-[0_0_15px_rgba(192,38,211,0.3)]"
+                            className="w-16 h-16 rounded-lg bg-purple-500/30 border border-purple-400 backdrop-blur-sm flex items-center justify-center active:bg-purple-500/60 active:scale-95 transition-all"
                         >
-                            <span className="text-3xl text-purple-400 font-black">▼</span>
+                            <span className="text-2xl text-white font-black">▼</span>
                         </button>
                     </div>
 
                     {/* Center: Brake */}
-                    <div className="flex items-end">
-                        <button
-                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
-                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
-                            className="w-24 h-24 rounded-xl bg-red-500/20 border-2 border-red-400/50 backdrop-blur-md flex items-center justify-center active:bg-red-500/50 transition-all shadow-[0_0_15px_rgba(248,113,113,0.3)]"
-                        >
-                            <span className="text-xl text-red-400 font-black font-orbitron">BRAKE</span>
-                        </button>
-                    </div>
+                    <button
+                        onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
+                        onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
+                        className="w-20 h-20 rounded-xl bg-red-500/30 border-2 border-red-400 backdrop-blur-sm flex items-center justify-center active:bg-red-500/60 active:scale-95 transition-all"
+                    >
+                        <span className="text-sm text-white font-black font-orbitron">BR</span>
+                    </button>
 
                     {/* Right: Gas */}
-                    <div className="flex items-end">
-                        <button
-                            onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
-                            onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
-                            className="w-28 h-40 rounded-t-3xl rounded-b-xl bg-green-500/20 border-2 border-green-400/50 backdrop-blur-md flex items-center justify-center active:bg-green-500/50 transition-all shadow-[0_0_15px_rgba(74,222,128,0.3)]"
-                        >
-                            <span className="text-2xl text-green-400 font-black font-orbitron rotate-[-90deg]">GAS</span>
-                        </button>
-                    </div>
+                    <button
+                        onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
+                        onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
+                        className="w-24 h-32 rounded-2xl bg-green-500/30 border-2 border-green-400 backdrop-blur-sm flex items-center justify-center active:bg-green-500/60 active:scale-95 transition-all"
+                    >
+                        <span className="text-xl text-white font-black font-orbitron">GAS</span>
+                    </button>
                 </div>
             </div>
         </div>
