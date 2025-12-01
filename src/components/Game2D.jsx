@@ -1011,7 +1011,7 @@ export default function Game2D() {
             }
             {/* Mobile Controls Overlay */}
             <div className="absolute inset-0 pointer-events-none md:hidden z-40 flex flex-col justify-end pb-8 px-4">
-                <div className="flex justify-between items-end w-full pointer-events-auto">
+                <div className="flex justify-center items-end w-full pointer-events-auto gap-4">
                     {/* Left: Gears */}
                     <div className="flex flex-col gap-4">
                         <button
@@ -1030,8 +1030,8 @@ export default function Game2D() {
                         </button>
                     </div>
 
-                    {/* Right: Pedals */}
-                    <div className="flex gap-6 items-end">
+                    {/* Center: Brake */}
+                    <div className="flex items-end">
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyA') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyA') }}
@@ -1039,6 +1039,10 @@ export default function Game2D() {
                         >
                             <span className="text-xl text-red-400 font-black font-orbitron">BRAKE</span>
                         </button>
+                    </div>
+
+                    {/* Right: Gas */}
+                    <div className="flex items-end">
                         <button
                             onTouchStart={(e) => { e.preventDefault(); handleTouchStart('KeyD') }}
                             onTouchEnd={(e) => { e.preventDefault(); handleTouchEnd('KeyD') }}
