@@ -1,190 +1,134 @@
-/* Mobile-first responsive overrides for Rally Drift 2D */
+/* Mobile UI - Beautiful & Spacious Design */
 
+/* Base Mobile Styles - Readable and Clean */
 @media (max-width: 768px) {
 
-    /* Scale down main title dramatically */
-    .font-orbitron {
-        font-size: 0.25em !important;
-    }
-
-    /* Make all text MUCH smaller on mobile */
+    /* Keep text readable - NO tiny fonts */
     body {
-        font-size: 7px !important;
+        font-size: 14px !important;
     }
 
-    /* Reduce padding everywhere to almost nothing */
+    /* Title - scaled down but still visible */
+    .font-orbitron {
+        font-size: 0.5em !important;
+    }
+
+    /* Moderate padding reduction - not extreme */
     [class*="p-6"],
-    [class*="p-8"],
+    [class*="p-8"] {
+        padding: 0.75rem !important;
+    }
+
     [class*="p-12"] {
-        padding: 0.25rem !important;
+        padding: 1rem !important;
     }
 
-    [class*="px-6"],
-    [class*="px-8"],
-    [class*="px-12"],
-    [class*="px-16"] {
-        padding-left: 0.25rem !important;
-        padding-right: 0.25rem !important;
-    }
-
-    [class*="py-6"],
-    [class*="py-8"],
-    [class*="py-12"] {
-        padding-top: 0.15rem !important;
-        padding-bottom: 0.15rem !important;
-    }
-
-    /* Reduce gaps to minimal */
+    /* Keep gaps reasonable */
     [class*="gap-6"],
     [class*="gap-8"],
     [class*="gap-10"] {
-        gap: 0.25rem !important;
+        gap: 0.75rem !important;
     }
 
-    [class*="gap-2"],
-    [class*="gap-3"],
-    [class*="gap-4"] {
-        gap: 0.15rem !important;
-    }
-
-    /* Make stats text TINY */
+    /* Readable text sizes */
     [class*="text-xl"] {
-        font-size: 0.5rem !important;
+        font-size: 1.125rem !important;
+        /* 18px */
     }
 
     [class*="text-2xl"] {
-        font-size: 0.6rem !important;
+        font-size: 1.25rem !important;
+        /* 20px */
     }
 
     [class*="text-3xl"] {
-        font-size: 0.7rem !important;
+        font-size: 1.5rem !important;
+        /* 24px */
     }
 
     [class*="text-4xl"] {
-        font-size: 0.8rem !important;
+        font-size: 1.875rem !important;
+        /* 30px */
     }
 
     [class*="text-5xl"] {
-        font-size: 0.9rem !important;
+        font-size: 2rem !important;
+        /* 32px */
     }
 
     [class*="text-7xl"],
     [class*="text-8xl"],
     [class*="text-9xl"] {
-        font-size: 1rem !important;
+        font-size: 2.5rem !important;
+        /* 40px */
     }
 
-    /* Compact buttons drastically */
-    button {
-        padding: 0.15rem 0.3rem !important;
-        font-size: 0.5rem !important;
-    }
-
-    /* Reduce border radius */
-    [class*="rounded-xl"],
-    [class*="rounded-2xl"],
-    [class*="rounded-3xl"] {
-        border-radius: 0.25rem !important;
-    }
-
-    /* Make HUD panels very compact */
+    /* HUD panels - compact but readable */
     [class*="w-72"] {
-        width: 5rem !important;
+        width: 12rem !important;
     }
 
-    /* Reduce margins to almost nothing */
-    [class*="mb-12"],
-    [class*="mt-12"] {
-        margin-top: 0.25rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-
-    [class*="mb-8"],
-    [class*="mt-8"] {
-        margin-top: 0.15rem !important;
-        margin-bottom: 0.15rem !important;
-    }
-
-    /* Make touch controls smaller */
-    [class*="md:hidden"] button {
-        transform: scale(0.5) !important;
+    /* Touch controls - NO SCALING, keep original size */
+    .md\:hidden button {
+        transform: none !important;
     }
 }
 
-/* LANDSCAPE MODE - Even MORE aggressive scaling + bottom positioning */
+/* Landscape Mode - Optimized for horizontal play */
 @media (max-width: 768px) and (orientation: landscape) {
-    body {
-        font-size: 6px !important;
-    }
 
-    .font-orbitron {
-        font-size: 0.2em !important;
-    }
-
-    /* Shrink everything even more in landscape */
+    /* Even more compact HUD in landscape */
     [class*="p-6"],
     [class*="p-8"],
     [class*="p-12"] {
-        padding: 0.15rem !important;
+        padding: 0.5rem !important;
     }
 
+    /* Stats text smaller in landscape to save vertical space */
     [class*="text-xl"],
     [class*="text-2xl"] {
-        font-size: 0.4rem !important;
+        font-size: 0.875rem !important;
+        /* 14px */
     }
 
     [class*="text-3xl"],
-    [class*="text-4xl"],
-    [class*="text-5xl"] {
-        font-size: 0.5rem !important;
+    [class*="text-4xl"] {
+        font-size: 1rem !important;
+        /* 16px */
     }
 
-    [class*="text-7xl"],
-    [class*="text-8xl"],
-    [class*="text-9xl"] {
-        font-size: 0.75rem !important;
-    }
-
-    /* Make HUD super compact in landscape */
+    /* Compact HUD width */
     [class*="w-72"] {
-        width: 4rem !important;
+        width: 8rem !important;
     }
 
-    /* LANDSCAPE BUTTON POSITIONING - Force to bottom */
+    /* Title very small in landscape */
+    .font-orbitron {
+        font-size: 0.35em !important;
+    }
+
+    /* Make buttons slightly larger in landscape for better tap targets */
+    .md\:hidden button {
+        transform: scale(1.1) !important;
+    }
+
+    /* Ensure buttons stay at bottom */
     .md\:hidden.z-40 {
         padding-bottom: 0.5rem !important;
-        align-items: flex-end !important;
-    }
-
-    /* Increase button sizes in landscape for better visibility */
-    .md\:hidden button {
-        transform: scale(0.7) !important;
-    }
-
-    /* Make button text larger and clearer in landscape */
-    .md\:hidden button span {
-        font-size: 1.5rem !important;
-        font-weight: 900 !important;
-    }
-
-    /* Reduce top padding specifically */
-    .absolute.top-0 {
-        top: 0.25rem !important;
     }
 }
 
-/* Extra small screens - maximum compression */
-@media (max-width: 480px) {
-    body {
-        font-size: 6px !important;
+/* Portrait Mode - More vertical space available */
+@media (max-width: 768px) and (orientation: portrait) {
+
+    /* Can be a bit more generous with spacing */
+    [class*="gap-6"],
+    [class*="gap-8"] {
+        gap: 1rem !important;
     }
 
-    .font-orbitron {
-        font-size: 0.2em !important;
-    }
-
-    /* Make touch controls tiny */
-    [class*="md:hidden"] button {
-        transform: scale(0.45) !important;
+    /* Larger buttons in portrait */
+    .md\:hidden button {
+        transform: scale(1.15) !important;
     }
 }
