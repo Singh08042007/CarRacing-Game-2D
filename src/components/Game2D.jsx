@@ -415,13 +415,13 @@ export default function Game2D() {
             const width = canvas.width = window.innerWidth, height = canvas.height = window.innerHeight
 
             // Dynamic Camera
-            const lookAhead = carBody.velocity.x * 10 // Reduced from 20 to prevent off-screen left
+            const lookAhead = 0 // Disabled to prevent car from going off-screen
             const speedShake = Math.abs(carBody.speed) > 30 ? (Math.random() - 0.5) * (carBody.speed / 10) : 0
 
-            const targetCamX = -carBody.position.x + width * 0.3 - lookAhead
+            const targetCamX = -carBody.position.x + width * 0.3
             const targetCamY = -carBody.position.y + height * 0.6 + Math.abs(carBody.velocity.x) * 2
 
-            const lerpFactor = Math.abs(carBody.speed) > 20 ? 0.25 : 0.1 // Increased from 0.15 to 0.25 for tighter tracking
+            const lerpFactor = 0.5 // Very fast tracking to prevent lag
             cameraPos.current.x += (targetCamX - cameraPos.current.x) * lerpFactor
             cameraPos.current.y += (targetCamY - cameraPos.current.y) * 0.1
 
